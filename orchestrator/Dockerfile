@@ -1,15 +1,7 @@
-# Use an official Python runtime as the base image
+# orchestrator/Dockerfile
 FROM python:3.11
-
-# Set the working directory in the container
-# Both the utils and src folders will be mounted as volumes, please see docker-compose.yaml
 WORKDIR /app
-
-# Copy the requirements file to the working directory
-COPY ./orchestrator/requirements.txt .
-
-# Install the Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Set the command to run the container
-CMD python utils/other/hotreload.py "orchestrator/src/app.py"
+# Copy the entire repository so shared files are available
+COPY . .
+RUN pip install --no-cache-dir -r orchestrator/requirements.txt
+CMD ["python", "orchestrator/src/app.py"]

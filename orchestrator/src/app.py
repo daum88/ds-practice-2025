@@ -1,75 +1,112 @@
 import sys
 import os
-
-# This set of lines are needed to import the gRPC stubs.
-# The path of the stubs is relative to the current file, or absolute inside the container.
-# Change these lines only if strictly needed.
-FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
-sys.path.insert(0, fraud_detection_grpc_path)
-import fraud_detection_pb2 as fraud_detection
-import fraud_detection_pb2_grpc as fraud_detection_grpc
-
 import grpc
-
-def greet(name='you'):
-    # Establish a connection with the fraud-detection gRPC service.
-    with grpc.insecure_channel('fraud_detection:50051') as channel:
-        # Create a stub object.
-        stub = fraud_detection_grpc.HelloServiceStub(channel)
-        # Call the service through the stub object.
-        response = stub.SayHello(fraud_detection.HelloRequest(name=name))
-    return response.greeting
-
-# Import Flask.
-# Flask is a web framework for Python.
-# It allows you to build a web application quickly.
-# For more information, see https://flask.palletsprojects.com/en/latest/
+import json
+import threading
+import logging
 from flask import Flask, request
 from flask_cors import CORS
-import json
 
-# Create a simple Flask app.
+# Configure logging for the orchestrator
+logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
+
+# Append the shared pb directory and fraud_detection subdirectory to sys.path
+base_pb = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../utils/pb"))
+sys.path.append(base_pb)
+sys.path.append(os.path.join(base_pb, "fraud_detection"))
+
+# Import gRPC modules from the shared folder
+from fraud_detection import fraud_detection_pb2 as fraud_pb
+from fraud_detection import fraud_detection_pb2_grpc as fraud_grpc
+import transaction_verification_pb2 as txn_pb
+import transaction_verification_pb2_grpc as txn_grpc
+import suggestions_pb2 as suggest_pb
+import suggestions_pb2_grpc as suggest_grpc
+
+# Initialize Flask app with CORS support.
 app = Flask(__name__)
-# Enable CORS for the app.
-CORS(app, resources={r'/*': {'origins': '*'}})
+CORS(app)
 
-# Define a GET endpoint.
-@app.route('/', methods=['GET'])
-def index():
+def check_fraud(order_data):
     """
-    Responds with 'Hello, [name]' when a GET request is made to '/' endpoint.
+    Calls the Fraud Detection gRPC service to determine if the order is fraudulent.
     """
-    # Test the fraud-detection gRPC service.
-    response = greet(name='orchestrator')
-    # Return the response.
-    return response
+    logging.info("Calling Fraud Detection Service")
+    with grpc.insecure_channel("fraud_detection:50051") as channel:
+        stub = fraud_grpc.FraudDetectionStub(channel)
+        response = stub.CheckFraud(fraud_pb.FraudRequest(order_json=json.dumps(order_data)))
+    logging.info(f"Fraud check returned: {response.is_fraudulent}")
+    return response.is_fraudulent
+
+def verify_transaction(order_data):
+    """
+    Calls the Transaction Verification gRPC service to validate the transaction.
+    """
+    logging.info("Calling Transaction Verification Service")
+    with grpc.insecure_channel("transaction_verification:50052") as channel:
+        stub = txn_grpc.TransactionVerificationStub(channel)
+        response = stub.VerifyTransaction(txn_pb.TransactionRequest(order_json=json.dumps(order_data)))
+    logging.info(f"Transaction verification returned: {response.is_valid}")
+    return response.is_valid
+
+def get_suggestions(order_data):
+    """
+    Calls the Suggestions gRPC service to get product suggestions based on the order.
+    """
+    logging.info("Calling Suggestions Service")
+    with grpc.insecure_channel("suggestions:50053") as channel:
+        stub = suggest_grpc.SuggestionsStub(channel)
+        response = stub.GetSuggestions(suggest_pb.SuggestionsRequest(order_json=json.dumps(order_data)))
+    suggestions = json.loads(response.suggestions_json)
+    logging.info(f"Suggestions received: {suggestions}")
+    return suggestions
 
 @app.route('/checkout', methods=['POST'])
 def checkout():
     """
-    Responds with a JSON object containing the order ID, status, and suggested books.
+    REST endpoint for handling order checkout.
+    It delegates processing to fraud detection, transaction verification,
+    and suggestions services concurrently.
     """
-    # Get request object data to json
+    logging.info("Received /checkout request")
     request_data = json.loads(request.data)
-    # Print request object data
-    print("Request Data:", request_data.get('items'))
+    fraud_result, txn_result, suggestions = None, None, None
 
-    # Dummy response following the provided YAML specification for the bookstore
-    order_status_response = {
-        'orderId': '12345',
-        'status': 'Order Approved',
-        'suggestedBooks': [
-            {'bookId': '123', 'title': 'The Best Book', 'author': 'Author 1'},
-            {'bookId': '456', 'title': 'The Second Best Book', 'author': 'Author 2'}
-        ]
+    def set_fraud_result():
+        nonlocal fraud_result
+        fraud_result = check_fraud(request_data)
+
+    def set_txn_result():
+        nonlocal txn_result
+        txn_result = verify_transaction(request_data)
+
+    def set_suggestions():
+        nonlocal suggestions
+        suggestions = get_suggestions(request_data)
+
+    threads = []
+    for func in (set_fraud_result, set_txn_result, set_suggestions):
+        t = threading.Thread(target=func)
+        threads.append(t)
+        t.start()
+    for t in threads:
+        t.join()
+
+    # Consolidate results and determine final status.
+    if fraud_result or not txn_result:
+        status = "Order Rejected"
+        suggestions = []
+    else:
+        status = "Order Approved"
+
+    response = {
+        "orderId": request_data.get("orderId", "00000"),
+        "status": status,
+        "suggestedBooks": suggestions
     }
+    logging.info(f"Checkout response: {response}")
+    return json.dumps(response), 200
 
-    return order_status_response
-
-
-if __name__ == '__main__':
-    # Run the app in debug mode to enable hot reloading.
-    # This is useful for development.
-    # The default port is 5000.
-    app.run(host='0.0.0.0')
+if __name__ == "__main__":
+    logging.info("Starting orchestrator service on port 5000")
+    app.run(host="0.0.0.0", port=5000)
