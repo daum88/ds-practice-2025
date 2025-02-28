@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package suggestions;
+
+service Suggestions {
+    rpc GetSuggestions (OrderData) returns (SuggestionsResponse);
+}
+
+message OrderData {
+    string orderId = 1;
+    string userId = 2;
+}
+
+message SuggestionsResponse {
+    repeated Book suggestedBooks = 1;
+}
+
+message Book {
+    string bookId = 1;
+    string title = 2;
+    string author = 3;
+}

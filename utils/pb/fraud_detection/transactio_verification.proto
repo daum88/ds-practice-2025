@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package transaction_verification;
+
+service TransactionVerification {
+    rpc VerifyTransaction (OrderData) returns (TransactionResponse);
+}
+
+message OrderData {
+    string orderId = 1;
+    string userId = 2;
+    double amount = 3;
+}
+
+message TransactionResponse {
+    bool is_verified = 1;
+}

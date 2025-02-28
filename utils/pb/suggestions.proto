@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package suggestions;
+
+service Suggestions {
+  rpc GetSuggestions (SuggestionsRequest) returns (SuggestionsResponse);
+}
+
+message SuggestionsRequest {
+  string order_json = 1;
+}
+
+message SuggestionsResponse {
+  string suggestions_json = 1;
+}
