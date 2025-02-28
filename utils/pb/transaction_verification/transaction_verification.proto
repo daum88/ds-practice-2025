@@ -1,0 +1,74 @@
+syntax = "proto3";
+
+package transaction_verification;
+
+// User details
+message User {
+  string name = 1;
+  string email = 2;
+  string contact = 3;
+  string address_line1 = 4;
+  string city = 5;
+  string state = 6;
+  string zip_code = 7;
+  string country = 8;
+}
+
+// Payment information
+message PaymentInfo {
+  string credit_card_number = 1;
+  string expiration_date = 2;
+  string cvv = 3;
+}
+
+// Shipping details
+message ShippingInfo {
+  string shippingMethod = 1;
+  bool gift_wrapping = 2;
+}
+
+// Order details
+message Book {
+  string name = 1;
+  int32 quantity = 2;
+}
+
+message OrderDetails {
+  repeated Book books = 1;
+  double total_amount = 2;
+  string comment = 3;
+}
+
+// Billing address details
+message BillingAddress {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string zip = 4;
+  string country = 5;
+}
+
+// Transaction request
+message TransactionValidationRequest {
+  string transaction_id = 1;
+  User user = 2;
+  PaymentInfo payment = 3;
+  string shippingMethod = 4;
+  OrderDetails order = 5;
+  string creditCard = 6;
+  string userComment = 7;
+  repeated Book items = 8; 
+  BillingAddress billingAddress = 9; 
+  bool giftWrapping = 10;
+  bool termsAccepted = 11;
+}
+
+// Response
+message TransactionValidationResponse {
+  bool valid = 1;
+  string message = 2;
+}
+
+service TransactionVerification {
+  rpc ValidateTransaction(TransactionValidationRequest) returns (TransactionValidationResponse);
+}
