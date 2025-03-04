@@ -4,6 +4,7 @@ This folder should contain your documentation, explaining the structure and cont
 
 
 ## Project Structure
+```
 .
 ├── docs/                     # Documentation and architecture diagrams
 │   ├── README.md
@@ -35,3 +36,7 @@ This folder should contain your documentation, explaining the structure and cont
 ├── .gitignore                # Git ignore file
 ├── README.md                 # Project documentation
 └── docker-compose.yaml       # Docker Compose configuration
+```
+
+
+
