@@ -17,6 +17,7 @@ from concurrent import futures
 class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
     def CheckFraud(self, request, context):
         response = fraud_detection.FraudCheckResponse()
+        print("Checking transaction for fraud...")
         
         # Dummy fraud detection logic
         if request.amount > 1000 or random.random() < 0.1:
@@ -24,7 +25,7 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
             response.message = "Transaction flagged as fraudulent."
         else:
             response.is_fraudulent = False
-            response.message = "Transaction is legitimate."
+            response.message = "✅ Transaction is legitimate."
         
         print(f"Transaction {request.transaction_id}: {response.message}")
         return response

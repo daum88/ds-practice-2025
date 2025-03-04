@@ -18,11 +18,7 @@ from concurrent import futures
 class TransactionVerificationService(transaction_verification_grpc.TransactionVerificationServicer):
     def ValidateTransaction(self, request, context):
         response = transaction_verification.TransactionValidationResponse()
-
-        # Print received transaction data for debugging
-        print("🚀 Received Transaction Data:")
-        print(request)
-
+        
         errors = []
 
         # Check if transaction has items
@@ -47,7 +43,7 @@ class TransactionVerificationService(transaction_verification_grpc.TransactionVe
 
         response.valid = True
         response.message = "✅ Transaction is valid."
-        print("✅ Validation Passed:", response.message)
+        print("Validation Passed:", response.message)
         return response
 
 

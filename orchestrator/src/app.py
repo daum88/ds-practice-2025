@@ -48,9 +48,6 @@ def validate_transaction(transaction_data):
     with grpc.insecure_channel(GRPC_SERVICES["transaction_verification"]) as channel:
         stub = transaction_verification_grpc.TransactionVerificationStub(channel)
 
-        # Debugging: Check transaction_data structure
-        print("Transaction Data Before Parsing:", json.dumps(transaction_data, indent=2))
-
         # Ensure `creditCard` remains a dictionary and correctly maps to the expected gRPC structure
         if "creditCard" in transaction_data and isinstance(transaction_data["creditCard"], dict):
             # Map fields correctly
@@ -65,9 +62,6 @@ def validate_transaction(transaction_data):
         # Convert dictionary to gRPC request object
         request = ParseDict(transaction_data, transaction_verification.TransactionValidationRequest())
 
-        # Debugging: Check parsed credit card number
-        print("Parsed Credit Card Number:", request.payment.credit_card_number)
-
         return stub.ValidateTransaction(request)
 
 
@@ -75,13 +69,15 @@ def get_suggestions(num_books):
     with grpc.insecure_channel(GRPC_SERVICES["suggestions"]) as channel:
         stub = suggestions_grpc.BookSuggestionsStub(channel)
         request = suggestions.BookSuggestionsRequest(num_books=num_books)
-        return stub.GetSuggestions(request)
+        response = stub.GetSuggestions(request)
+        return [{"title": book.title, "author": book.author} for book in response.books]
+
 
 @app.route('/checkout', methods=['POST'])
 def checkout():
     request_data = json.loads(request.data)
-    #transaction_id = request_data.get("transactionId", "")
-    transaction_id = request_data.get("transactionId", str(uuid.uuid4()))
+    transaction_id = request_data.get("transactionId", "12345")
+    #transaction_id = request_data.get("transactionId", str(uuid.uuid4()))
     amount = request_data.get("amount", 0)
     num_books = request_data.get("numBooks", 3)
 
@@ -103,7 +99,7 @@ def checkout():
         suggested_books = []
     else:
         order_status = "Order Approved"
-        suggested_books = [{"name": book} for book in suggestions_result.books]
+        suggested_books = suggestions_result
 
     response = {
         "orderId": transaction_id,

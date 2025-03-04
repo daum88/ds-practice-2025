@@ -11,18 +11,35 @@ sys.path.insert(0, suggestions_grpc_path)
 import suggestions_pb2 as suggestions
 import suggestions_pb2_grpc as suggestions_grpc
 
-# Static list of books
+
+# Static list of books with authors
 BOOKS_LIST = [
-    "The Great Gatsby", "1984", "To Kill a Mockingbird", "Moby Dick", "Pride and Prejudice",
-    "War and Peace", "The Catcher in the Rye", "The Lord of the Rings", "Harry Potter Series",
-    "Brave New World", "The Hobbit", "Fahrenheit 451", "Crime and Punishment", "The Odyssey"
+    {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
+    {"title": "1984", "author": "George Orwell"},
+    {"title": "To Kill a Mockingbird", "author": "Harper Lee"},
+    {"title": "Moby Dick", "author": "Herman Melville"},
+    {"title": "Pride and Prejudice", "author": "Jane Austen"},
+    {"title": "War and Peace", "author": "Leo Tolstoy"},
+    {"title": "The Catcher in the Rye", "author": "J.D. Salinger"},
+    {"title": "The Lord of the Rings", "author": "J.R.R. Tolkien"},
+    {"title": "Harry Potter Series", "author": "J.K. Rowling"},
+    {"title": "Brave New World", "author": "Aldous Huxley"},
+    {"title": "The Hobbit", "author": "J.R.R. Tolkien"},
+    {"title": "Fahrenheit 451", "author": "Ray Bradbury"},
+    {"title": "Crime and Punishment", "author": "Fyodor Dostoevsky"},
+    {"title": "The Odyssey", "author": "Homer"}
 ]
 
 class BookSuggestionsService(suggestions_grpc.BookSuggestionsServicer):
     def GetSuggestions(self, request, context):
         response = suggestions.BookSuggestionsResponse()
+        print("Getting Book suggestions...")
         num_suggestions = min(request.num_books, len(BOOKS_LIST))
-        response.books.extend(random.sample(BOOKS_LIST, num_suggestions))
+        selected_books = random.sample(BOOKS_LIST, k=num_suggestions)
+        print(f"Books suggestions: {selected_books}")
+        response.books.extend([
+            suggestions.Book(title=book["title"], author=book["author"]) for book in selected_books
+        ])
         return response
 
 def serve():

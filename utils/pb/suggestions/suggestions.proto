@@ -2,14 +2,19 @@ syntax = "proto3";
 
 package suggestions;
 
+service BookSuggestions {
+    rpc GetSuggestions (BookSuggestionsRequest) returns (BookSuggestionsResponse);
+}
+
+message Book {
+    string title = 1;
+    string author = 2;
+}
+
 message BookSuggestionsRequest {
-  int32 num_books = 1;
+    int32 num_books = 1;
 }
 
 message BookSuggestionsResponse {
-  repeated string books = 1;
-}
-
-service BookSuggestions {
-  rpc GetSuggestions(BookSuggestionsRequest) returns (BookSuggestionsResponse);
+    repeated Book books = 1;
 }
