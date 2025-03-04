@@ -39,6 +39,10 @@ This folder should contain your documentation, explaining the structure and cont
 └── docker-compose.yaml       # Docker Compose configuration
 ```
 
+### Architecture
+![Architecture](docs/Architecture_diagram.png)
 
+### System diagram
+![System](docs/System-diagram.jpg)
 
 
