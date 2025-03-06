@@ -37,10 +37,17 @@ GRPC_SERVICES = {
     "suggestions": "suggestions:50053"
 }
 
-def check_fraud(transaction_id, amount):
+def check_fraud(request_data):
     with grpc.insecure_channel(GRPC_SERVICES["fraud_detection"]) as channel:
         stub = fraud_detection_grpc.FraudDetectionStub(channel)
-        request = fraud_detection.FraudCheckRequest(transaction_id=transaction_id, amount=amount)
+        request = fraud_detection.FraudCheckRequest(
+            transaction_id=request_data.get("transactionId", "12345"),
+            payment=fraud_detection.PaymentInfo(
+                credit_card_number=request_data.get("creditCard", {}).get("number", ""),
+                expiration_date=request_data.get("creditCard", {}).get("expirationDate", ""),
+                cvv=request_data.get("creditCard", {}).get("cvv", "")),
+            amount=request_data.get("amount", 100)
+        )
         return stub.CheckFraud(request)
 
 
@@ -78,11 +85,11 @@ def checkout():
     request_data = json.loads(request.data)
     transaction_id = request_data.get("transactionId", "12345")
     #transaction_id = request_data.get("transactionId", str(uuid.uuid4()))
-    amount = request_data.get("amount", 0)
+    amount = request_data.get("amount", 100)
     num_books = request_data.get("numBooks", 3)
 
     with ThreadPoolExecutor() as executor:
-        future_fraud = executor.submit(check_fraud, transaction_id, amount)
+        future_fraud = executor.submit(check_fraud, request_data)
         future_validation = executor.submit(validate_transaction, request_data)
         future_suggestions = executor.submit(get_suggestions, num_books)
 
@@ -90,7 +97,7 @@ def checkout():
         validation_result = future_validation.result()
         suggestions_result = future_suggestions.result()
 
-    # Improved logic: Approve order only if fraud check is False AND validation is True
+    # Approve order only if fraud check is False AND validation is True
     if fraud_result.is_fraudulent:
         order_status = "Order Rejected - Fraudulent Transaction"
         suggested_books = []

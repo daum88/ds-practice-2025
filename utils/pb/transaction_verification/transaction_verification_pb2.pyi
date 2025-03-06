@@ -44,12 +44,14 @@ class ShippingInfo(_message.Message):
     def __init__(self, shippingMethod: _Optional[str] = ..., gift_wrapping: bool = ...) -> None: ...
 
 class Book(_message.Message):
-    __slots__ = ("name", "quantity")
+    __slots__ = ("name", "quantity", "author")
     NAME_FIELD_NUMBER: _ClassVar[int]
     QUANTITY_FIELD_NUMBER: _ClassVar[int]
+    AUTHOR_FIELD_NUMBER: _ClassVar[int]
     name: str
     quantity: int
-    def __init__(self, name: _Optional[str] = ..., quantity: _Optional[int] = ...) -> None: ...
+    author: str
+    def __init__(self, name: _Optional[str] = ..., quantity: _Optional[int] = ..., author: _Optional[str] = ...) -> None: ...
 
 class OrderDetails(_message.Message):
     __slots__ = ("books", "total_amount", "comment")
@@ -76,7 +78,7 @@ class BillingAddress(_message.Message):
     def __init__(self, street: _Optional[str] = ..., city: _Optional[str] = ..., state: _Optional[str] = ..., zip: _Optional[str] = ..., country: _Optional[str] = ...) -> None: ...
 
 class TransactionValidationRequest(_message.Message):
-    __slots__ = ("transaction_id", "user", "payment", "shippingMethod", "order", "creditCard", "userComment", "items", "billingAddress", "giftWrapping", "termsAccepted")
+    __slots__ = ("transaction_id", "user", "payment", "shippingMethod", "order", "creditCard", "userComment", "items", "billingAddress", "giftWrapping", "termsAccepted", "author")
     TRANSACTION_ID_FIELD_NUMBER: _ClassVar[int]
     USER_FIELD_NUMBER: _ClassVar[int]
     PAYMENT_FIELD_NUMBER: _ClassVar[int]
@@ -88,6 +90,7 @@ class TransactionValidationRequest(_message.Message):
     BILLINGADDRESS_FIELD_NUMBER: _ClassVar[int]
     GIFTWRAPPING_FIELD_NUMBER: _ClassVar[int]
     TERMSACCEPTED_FIELD_NUMBER: _ClassVar[int]
+    AUTHOR_FIELD_NUMBER: _ClassVar[int]
     transaction_id: str
     user: User
     payment: PaymentInfo
@@ -99,7 +102,8 @@ class TransactionValidationRequest(_message.Message):
     billingAddress: BillingAddress
     giftWrapping: bool
     termsAccepted: bool
-    def __init__(self, transaction_id: _Optional[str] = ..., user: _Optional[_Union[User, _Mapping]] = ..., payment: _Optional[_Union[PaymentInfo, _Mapping]] = ..., shippingMethod: _Optional[str] = ..., order: _Optional[_Union[OrderDetails, _Mapping]] = ..., creditCard: _Optional[str] = ..., userComment: _Optional[str] = ..., items: _Optional[_Iterable[_Union[Book, _Mapping]]] = ..., billingAddress: _Optional[_Union[BillingAddress, _Mapping]] = ..., giftWrapping: bool = ..., termsAccepted: bool = ...) -> None: ...
+    author: str
+    def __init__(self, transaction_id: _Optional[str] = ..., user: _Optional[_Union[User, _Mapping]] = ..., payment: _Optional[_Union[PaymentInfo, _Mapping]] = ..., shippingMethod: _Optional[str] = ..., order: _Optional[_Union[OrderDetails, _Mapping]] = ..., creditCard: _Optional[str] = ..., userComment: _Optional[str] = ..., items: _Optional[_Iterable[_Union[Book, _Mapping]]] = ..., billingAddress: _Optional[_Union[BillingAddress, _Mapping]] = ..., giftWrapping: bool = ..., termsAccepted: bool = ..., author: _Optional[str] = ...) -> None: ...
 
 class TransactionValidationResponse(_message.Message):
     __slots__ = ("valid", "message")

@@ -13,11 +13,38 @@ message OrderDetails {
   double total_amount = 2;
 }
 
+message User {
+  string name = 1;
+  string email = 2;
+  string contact = 3;
+  string address_line1 = 4;
+  string city = 5;
+  string state = 6;
+  string zip_code = 7;
+  string country = 8;
+}
+
 message FraudCheckRequest {
   string transaction_id = 1;
   PaymentInfo payment = 2;
   OrderDetails order = 3;
   double amount = 4;
+  User user = 5;
+  string creditCard = 6;
+  string userComment = 7;
+  BillingAddress billingAddress = 8; 
+  string shippingMethod = 9;
+  bool giftWrapping = 10;
+  bool termsAccepted = 11;
+  
+}
+
+message BillingAddress {
+  string street = 1;
+  string city = 2;
+  string state = 3;
+  string zip = 4;
+  string country = 5;
 }
 
 message FraudCheckResponse {

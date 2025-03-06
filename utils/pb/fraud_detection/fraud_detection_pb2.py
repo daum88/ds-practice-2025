@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n.utils/pb/fraud_detection/fraud_detection.proto\x12\x0f\x66raud_detection\"O\n\x0bPaymentInfo\x12\x1a\n\x12\x63redit_card_number\x18\x01 \x01(\t\x12\x17\n\x0f\x65xpiration_date\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t\"3\n\x0cOrderDetails\x12\r\n\x05\x62ooks\x18\x01 \x03(\t\x12\x14\n\x0ctotal_amount\x18\x02 \x01(\x01\"\x98\x01\n\x11\x46raudCheckRequest\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t\x12-\n\x07payment\x18\x02 \x01(\x0b\x32\x1c.fraud_detection.PaymentInfo\x12,\n\x05order\x18\x03 \x01(\x0b\x32\x1d.fraud_detection.OrderDetails\x12\x0e\n\x06\x61mount\x18\x04 \x01(\x01\"<\n\x12\x46raudCheckResponse\x12\x15\n\ris_fraudulent\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2g\n\x0e\x46raudDetection\x12U\n\nCheckFraud\x12\".fraud_detection.FraudCheckRequest\x1a#.fraud_detection.FraudCheckResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n.utils/pb/fraud_detection/fraud_detection.proto\x12\x0f\x66raud_detection\"O\n\x0bPaymentInfo\x12\x1a\n\x12\x63redit_card_number\x18\x01 \x01(\t\x12\x17\n\x0f\x65xpiration_date\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t\"3\n\x0cOrderDetails\x12\r\n\x05\x62ooks\x18\x01 \x03(\t\x12\x14\n\x0ctotal_amount\x18\x02 \x01(\x01\"\x8b\x01\n\x04User\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\r\n\x05\x65mail\x18\x02 \x01(\t\x12\x0f\n\x07\x63ontact\x18\x03 \x01(\t\x12\x15\n\raddress_line1\x18\x04 \x01(\t\x12\x0c\n\x04\x63ity\x18\x05 \x01(\t\x12\r\n\x05state\x18\x06 \x01(\t\x12\x10\n\x08zip_code\x18\x07 \x01(\t\x12\x0f\n\x07\x63ountry\x18\x08 \x01(\t\"\xe4\x02\n\x11\x46raudCheckRequest\x12\x16\n\x0etransaction_id\x18\x01 \x01(\t\x12-\n\x07payment\x18\x02 \x01(\x0b\x32\x1c.fraud_detection.PaymentInfo\x12,\n\x05order\x18\x03 \x01(\x0b\x32\x1d.fraud_detection.OrderDetails\x12\x0e\n\x06\x61mount\x18\x04 \x01(\x01\x12#\n\x04user\x18\x05 \x01(\x0b\x32\x15.fraud_detection.User\x12\x12\n\ncreditCard\x18\x06 \x01(\t\x12\x13\n\x0buserComment\x18\x07 \x01(\t\x12\x37\n\x0e\x62illingAddress\x18\x08 \x01(\x0b\x32\x1f.fraud_detection.BillingAddress\x12\x16\n\x0eshippingMethod\x18\t \x01(\t\x12\x14\n\x0cgiftWrapping\x18\n \x01(\x08\x12\x15\n\rtermsAccepted\x18\x0b \x01(\x08\"[\n\x0e\x42illingAddress\x12\x0e\n\x06street\x18\x01 \x01(\t\x12\x0c\n\x04\x63ity\x18\x02 \x01(\t\x12\r\n\x05state\x18\x03 \x01(\t\x12\x0b\n\x03zip\x18\x04 \x01(\t\x12\x0f\n\x07\x63ountry\x18\x05 \x01(\t\"<\n\x12\x46raudCheckResponse\x12\x15\n\ris_fraudulent\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2g\n\x0e\x46raudDetection\x12U\n\nCheckFraud\x12\".fraud_detection.FraudCheckRequest\x1a#.fraud_detection.FraudCheckResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -25,10 +25,14 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_PAYMENTINFO']._serialized_end=146
   _globals['_ORDERDETAILS']._serialized_start=148
   _globals['_ORDERDETAILS']._serialized_end=199
-  _globals['_FRAUDCHECKREQUEST']._serialized_start=202
-  _globals['_FRAUDCHECKREQUEST']._serialized_end=354
-  _globals['_FRAUDCHECKRESPONSE']._serialized_start=356
-  _globals['_FRAUDCHECKRESPONSE']._serialized_end=416
-  _globals['_FRAUDDETECTION']._serialized_start=418
-  _globals['_FRAUDDETECTION']._serialized_end=521
+  _globals['_USER']._serialized_start=202
+  _globals['_USER']._serialized_end=341
+  _globals['_FRAUDCHECKREQUEST']._serialized_start=344
+  _globals['_FRAUDCHECKREQUEST']._serialized_end=700
+  _globals['_BILLINGADDRESS']._serialized_start=702
+  _globals['_BILLINGADDRESS']._serialized_end=793
+  _globals['_FRAUDCHECKRESPONSE']._serialized_start=795
+  _globals['_FRAUDCHECKRESPONSE']._serialized_end=855
+  _globals['_FRAUDDETECTION']._serialized_start=857
+  _globals['_FRAUDDETECTION']._serialized_end=960
 # @@protoc_insertion_point(module_scope)

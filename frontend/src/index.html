@@ -73,18 +73,35 @@
     </div>
 
     <script>
-        const items = [
-            { name: "Book A", quantity: 1 },
-            { name: "Book B", quantity: 2 }
+            // Predefined list of available books (using real book names and authors)
+        const availableBooks = [
+            { name: "The Great Gatsby", author: "F. Scott Fitzgerald", quantity: 1 },
+            { name: "1984", author: "George Orwell", quantity: 1 },
+            { name: "To Kill a Mockingbird", author: "Harper Lee", quantity: 1 },
+            { name: "Pride and Prejudice", author: "Jane Austen", quantity: 1 },
+            { name: "Moby-Dick", author: "Herman Melville", quantity: 1 }
         ];
 
+        // Function to randomly select a number of items (2 or 3) from the availableBooks list.
+        function getRandomItems(items, count) {
+            // Shuffle the items array
+            const shuffled = items.slice().sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        // Choose randomly 2 or 3 books
+        const randomCount = Math.floor(Math.random() * 2) + 2; // Randomly 2 or 3
+        const selectedBooks = getRandomItems(availableBooks, randomCount);
+
+        // Display the selected books in the itemList
         const itemListElement = document.getElementById('itemList');
-        items.forEach(item => {
+        selectedBooks.forEach(book => {
             const li = document.createElement('li');
-            li.textContent = `${item.name} - Quantity: ${item.quantity}`;
+            li.textContent = `${book.name} by ${book.author} - Quantity: ${book.quantity}`;
             li.className = "bg-gray-100 p-3 rounded-lg";
             itemListElement.appendChild(li);
         });
+
 
         document.getElementById('checkoutForm').addEventListener('submit', async function(event) {
             event.preventDefault();
@@ -101,7 +118,7 @@
                     cvv: formData.get('cvv'),
                 },
                 userComment: formData.get('userComment'),
-                items: items,
+                items: selectedBooks,
                 billingAddress: {
                     street: formData.get('billingStreet'),
                     city: formData.get('billingCity'),

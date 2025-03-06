@@ -47,25 +47,6 @@ class TransactionVerificationService(transaction_verification_grpc.TransactionVe
         return response
 
 
-    '''def is_valid_credit_card(self, credit_card_number):
-        credit_card_number = re.sub(r'\D', '', credit_card_number)  # Remove non-digit characters
-        if not credit_card_number:
-            return False
-        
-        total = 0
-        num_digits = len(credit_card_number)
-        odd_even = num_digits & 1
-        
-        for i in range(num_digits):
-            digit = int(credit_card_number[i])
-            if (i & 1) ^ odd_even:
-                digit *= 2
-                if digit > 9:
-                    digit -= 9
-            total += digit
-        
-        return (total % 10) == 0 '''
-
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor())
     transaction_verification_grpc.add_TransactionVerificationServicer_to_server(TransactionVerificationService(), server)

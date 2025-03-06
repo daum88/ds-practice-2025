@@ -18,11 +18,26 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
     def CheckFraud(self, request, context):
         response = fraud_detection.FraudCheckResponse()
         print("Checking transaction for fraud...")
-        
+
         # Dummy fraud detection logic
         if request.amount > 1000 or random.random() < 0.1:
             response.is_fraudulent = True
-            response.message = "Transaction flagged as fraudulent."
+            response.message = "Transaction flagged as fraudulent. Invalid transaction data."
+
+        if len(request.payment.credit_card_number) != 16:
+            response.is_fraudulent = True
+            response.message = "Transaction flagged as fraudulent. Invalid credit card number."
+
+        if len(request.payment.expiration_date) == 5 and int(request.payment.expiration_date[0:2]) > 12 and int(request.payment.expiration_date[3:5]) < 25:
+            response.is_fraudulent = True
+            response.message = "Transaction flagged as fraudulent. Credit card has been expired."
+            print(f"Transaction {request.transaction_id}: {response.message}")
+            return response
+
+        if request.payment.cvv == "000":
+            response.is_fraudulent = True
+            response.message = "Transaction flagged as fraudulent. CVV is required."
+
         else:
             response.is_fraudulent = False
             response.message = "✅ Transaction is legitimate."
