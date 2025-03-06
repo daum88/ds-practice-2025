@@ -28,15 +28,15 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
             response.is_fraudulent = True
             response.message = "Transaction flagged as fraudulent. Invalid credit card number."
 
-        if len(request.payment.expiration_date) == 5 and int(request.payment.expiration_date[0:2]) > 12 and int(request.payment.expiration_date[3:5]) < 25:
+        if len(request.payment.expiration_date) == 5 and (int(request.payment.expiration_date[0:2]) > 12 or int(request.payment.expiration_date[3:5]) < 25):
             response.is_fraudulent = True
             response.message = "Transaction flagged as fraudulent. Credit card has been expired."
             print(f"Transaction {request.transaction_id}: {response.message}")
             return response
 
-        if request.payment.cvv == "000":
+        if request.payment.cvv == "000" or not len(request.payment.cvv) == 3:
             response.is_fraudulent = True
-            response.message = "Transaction flagged as fraudulent. CVV is required."
+            response.message = "Transaction flagged as fraudulent. CVV is invalid."
 
         else:
             response.is_fraudulent = False
