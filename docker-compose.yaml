@@ -27,3 +27,6 @@ services:
       dockerfile: suggestions/Dockerfile
     ports:
       - "50053:50053"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+

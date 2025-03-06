@@ -14,7 +14,7 @@
         <div class="mb-6">
             <h2 class="text-lg font-semibold text-gray-700">Items</h2>
             <ul id="itemList" class="list-none p-0 mt-2 space-y-2">
-                <!-- Items will be dynamically rendered here -->
+                <!-- Randomly selected books will appear here -->
             </ul>
         </div>
 
@@ -68,24 +68,40 @@
         </div>
         <button type="submit" class="w-full bg-blue-600 text-white font-medium py-2 px-4 rounded-lg hover:bg-blue-700">Submit Order</button>
     </form>
-
     <div id="response" class="mt-6 p-4 border rounded-lg hidden"></div>
 </div>
 
 <script>
-    const items = [
-        { name: "Book A", quantity: 1 },
-        { name: "Book B", quantity: 2 }
+    // Predefined list of available books (using real book names and authors)
+    const availableBooks = [
+        { name: "The Great Gatsby", author: "F. Scott Fitzgerald", quantity: 1 },
+        { name: "1984", author: "George Orwell", quantity: 1 },
+        { name: "To Kill a Mockingbird", author: "Harper Lee", quantity: 1 },
+        { name: "Pride and Prejudice", author: "Jane Austen", quantity: 1 },
+        { name: "Moby-Dick", author: "Herman Melville", quantity: 1 }
     ];
 
+    // Function to randomly select a number of items (2 or 3) from the availableBooks list.
+    function getRandomItems(items, count) {
+        // Shuffle the items array
+        const shuffled = items.slice().sort(() => 0.5 - Math.random());
+        return shuffled.slice(0, count);
+    }
+
+    // Choose randomly 2 or 3 books
+    const randomCount = Math.floor(Math.random() * 2) + 2; // Randomly 2 or 3
+    const selectedBooks = getRandomItems(availableBooks, randomCount);
+
+    // Display the selected books in the itemList
     const itemListElement = document.getElementById('itemList');
-    items.forEach(item => {
+    selectedBooks.forEach(book => {
         const li = document.createElement('li');
-        li.textContent = `${item.name} - Quantity: ${item.quantity}`;
+        li.textContent = `${book.name} by ${book.author} - Quantity: ${book.quantity}`;
         li.className = "bg-gray-100 p-3 rounded-lg";
         itemListElement.appendChild(li);
     });
 
+    // Form submission handler that sends the order with the randomly selected books
     document.getElementById('checkoutForm').addEventListener('submit', async function(event) {
         event.preventDefault();
 
@@ -93,35 +109,33 @@
         const data = {
             user: {
                 name: formData.get('name'),
-                contact: formData.get('contact'),
+                contact: formData.get('contact')
             },
             creditCard: {
                 number: formData.get('creditCard'),
                 expirationDate: formData.get('expirationDate'),
-                cvv: formData.get('cvv'),
+                cvv: formData.get('cvv')
             },
             userComment: formData.get('userComment'),
-            items: items,
+            items: selectedBooks,  // Use the randomly selected books here
             billingAddress: {
                 street: formData.get('billingStreet'),
                 city: formData.get('billingCity'),
                 state: formData.get('billingState'),
                 zip: formData.get('billingZip'),
-                country: formData.get('billingCountry'),
+                country: formData.get('billingCountry')
             },
             shippingMethod: formData.get('shippingMethod'),
             giftWrapping: formData.get('giftWrapping') === 'on',
-            termsAccepted: formData.get('terms') === 'on',
+            termsAccepted: formData.get('terms') === 'on'
         };
 
         try {
             // Update the endpoint to use the correct host port (5001)
             const response = await fetch('http://localhost:5001/checkout', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(data),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
             });
 
             const result = await response.json();
@@ -133,9 +147,8 @@
             <strong>Order status: ${result.status}</strong><br>
             Order ID: ${result.orderId}<br>
             ${result.status === "Order Approved" ?
-                    `Suggested Books:
-                <ul class="list-disc pl-5 mt-2 space-y-1">${suggestedBooks}</ul>`
-                    : ``
+                    `Suggested Books:<ul class="list-disc pl-5 mt-2 space-y-1">${suggestedBooks}</ul>` :
+                    ``
                 }
           `;
                 const color = result.status === 'Order Approved' ? 'green' : 'red';
