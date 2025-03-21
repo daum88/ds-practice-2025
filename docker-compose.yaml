@@ -98,6 +98,8 @@ services:
       # The PYTHONFILE environment variable specifies the absolute entry point of the application
       # Check app.py in the suggestions directory to see how this is used
       - PYTHONFILE=/app/suggestions/src/app.py
+      #OpenAI API key
+      - OPENAI_API_KEY=${OPEN-AI_API_KEY}
     volumes:
       # Mount the utils directory in the current directory to the /app/utils directory in the container
       - ./utils:/app/utils
