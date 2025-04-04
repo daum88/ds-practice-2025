@@ -19,6 +19,15 @@ openai.api_key = os.getenv("OPENAI_API_KEY", "")
 # In-memory store for caching orders and tracking vector clocks
 orders = {}
 
+# Fallback book list (shared by all requests)
+BOOKS_LIST = [
+    {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
+    {"title": "1984", "author": "George Orwell"},
+    {"title": "To Kill a Mockingbird", "author": "Harper Lee"},
+    {"title": "Pride and Prejudice", "author": "Jane Austen"},
+    {"title": "Moby-Dick", "author": "Herman Melville"},
+]
+
 class BookSuggestionsService(suggestions_grpc.BookSuggestionsServicer):
     def InitOrder(self, request, context):
         orders[request.order_id] = {
@@ -36,12 +45,15 @@ class BookSuggestionsService(suggestions_grpc.BookSuggestionsServicer):
         else:
             logging.warning(f"GetSuggestions called for uninitialized order {order_id}")
 
-        # Existing suggestion logic
+        # Suggestion logic
         try:
             prompt = f"Please suggest {request.num_books} book{'s' if request.num_books != 1 else ''}. Return only a JSON array of objects with title and author."
             resp = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
-                messages=[{"role": "system", "content": "You are a helpful book recommendation assistant."}, {"role": "user", "content": prompt}],
+                messages=[
+                    {"role": "system", "content": "You are a helpful book recommendation assistant."},
+                    {"role": "user", "content": prompt}
+                ],
                 temperature=0.7,
                 max_tokens=200
             )
@@ -50,8 +62,7 @@ class BookSuggestionsService(suggestions_grpc.BookSuggestionsServicer):
         except Exception as e:
             logging.error(f"AI suggestions failed ({e}); falling back to static list")
             from random import sample
-            from __main__ import BOOKS_LIST
-            books = [ {"title": b['title'], "author": b['author']} for b in sample(BOOKS_LIST, min(request.num_books, len(BOOKS_LIST))) ]
+            books = sample(BOOKS_LIST, min(request.num_books, len(BOOKS_LIST)))
 
         response = suggestions.BookSuggestionsResponse()
         response.books.extend([suggestions.Book(title=b['title'], author=b['author']) for b in books])
@@ -67,4 +78,3 @@ def serve():
 
 if __name__ == '__main__':
     serve()
-
