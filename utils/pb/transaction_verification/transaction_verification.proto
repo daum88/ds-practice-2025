@@ -31,7 +31,7 @@ message ShippingInfo {
 message Book {
   string name = 1;
   int32 quantity = 2;
-  string author =3;
+  string author = 3;
 }
 
 message OrderDetails {
@@ -63,6 +63,7 @@ message TransactionValidationRequest {
   bool giftWrapping = 10;
   bool termsAccepted = 11;
   string author = 12;
+  string order_id = 13;   // <<< Added field for order ID
 }
 
 // Response
@@ -71,6 +72,17 @@ message TransactionValidationResponse {
   string message = 2;
 }
 
+message OrderInitRequest {
+  string order_id = 1;
+  string order_data = 2;
+}
+
+message OrderInitResponse {
+  bool success = 1;
+  string message = 2;
+}
+
 service TransactionVerification {
   rpc ValidateTransaction(TransactionValidationRequest) returns (TransactionValidationResponse);
+  rpc InitOrder(OrderInitRequest) returns (OrderInitResponse);
 }

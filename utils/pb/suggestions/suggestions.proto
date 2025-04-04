@@ -4,6 +4,7 @@ package suggestions;
 
 service BookSuggestions {
     rpc GetSuggestions (BookSuggestionsRequest) returns (BookSuggestionsResponse);
+    rpc InitOrder(OrderInitRequest) returns (OrderInitResponse);
 }
 
 message Book {
@@ -12,9 +13,20 @@ message Book {
 }
 
 message BookSuggestionsRequest {
-    int32 num_books = 1;
+    string order_id = 1;  // Added field for order id
+    int32 num_books = 2;
 }
 
 message BookSuggestionsResponse {
     repeated Book books = 1;
+}
+
+message OrderInitRequest {
+    string order_id = 1;
+    string order_data = 2;
+}
+
+message OrderInitResponse {
+    bool success = 1;
+    string message = 2;
 }

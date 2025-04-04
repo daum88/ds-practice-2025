@@ -78,7 +78,7 @@ class BillingAddress(_message.Message):
     def __init__(self, street: _Optional[str] = ..., city: _Optional[str] = ..., state: _Optional[str] = ..., zip: _Optional[str] = ..., country: _Optional[str] = ...) -> None: ...
 
 class TransactionValidationRequest(_message.Message):
-    __slots__ = ("transaction_id", "user", "payment", "shippingMethod", "order", "creditCard", "userComment", "items", "billingAddress", "giftWrapping", "termsAccepted", "author")
+    __slots__ = ("transaction_id", "user", "payment", "shippingMethod", "order", "creditCard", "userComment", "items", "billingAddress", "giftWrapping", "termsAccepted", "author", "order_id")
     TRANSACTION_ID_FIELD_NUMBER: _ClassVar[int]
     USER_FIELD_NUMBER: _ClassVar[int]
     PAYMENT_FIELD_NUMBER: _ClassVar[int]
@@ -91,6 +91,7 @@ class TransactionValidationRequest(_message.Message):
     GIFTWRAPPING_FIELD_NUMBER: _ClassVar[int]
     TERMSACCEPTED_FIELD_NUMBER: _ClassVar[int]
     AUTHOR_FIELD_NUMBER: _ClassVar[int]
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
     transaction_id: str
     user: User
     payment: PaymentInfo
@@ -103,7 +104,8 @@ class TransactionValidationRequest(_message.Message):
     giftWrapping: bool
     termsAccepted: bool
     author: str
-    def __init__(self, transaction_id: _Optional[str] = ..., user: _Optional[_Union[User, _Mapping]] = ..., payment: _Optional[_Union[PaymentInfo, _Mapping]] = ..., shippingMethod: _Optional[str] = ..., order: _Optional[_Union[OrderDetails, _Mapping]] = ..., creditCard: _Optional[str] = ..., userComment: _Optional[str] = ..., items: _Optional[_Iterable[_Union[Book, _Mapping]]] = ..., billingAddress: _Optional[_Union[BillingAddress, _Mapping]] = ..., giftWrapping: bool = ..., termsAccepted: bool = ..., author: _Optional[str] = ...) -> None: ...
+    order_id: str
+    def __init__(self, transaction_id: _Optional[str] = ..., user: _Optional[_Union[User, _Mapping]] = ..., payment: _Optional[_Union[PaymentInfo, _Mapping]] = ..., shippingMethod: _Optional[str] = ..., order: _Optional[_Union[OrderDetails, _Mapping]] = ..., creditCard: _Optional[str] = ..., userComment: _Optional[str] = ..., items: _Optional[_Iterable[_Union[Book, _Mapping]]] = ..., billingAddress: _Optional[_Union[BillingAddress, _Mapping]] = ..., giftWrapping: bool = ..., termsAccepted: bool = ..., author: _Optional[str] = ..., order_id: _Optional[str] = ...) -> None: ...
 
 class TransactionValidationResponse(_message.Message):
     __slots__ = ("valid", "message")
@@ -112,3 +114,19 @@ class TransactionValidationResponse(_message.Message):
     valid: bool
     message: str
     def __init__(self, valid: bool = ..., message: _Optional[str] = ...) -> None: ...
+
+class OrderInitRequest(_message.Message):
+    __slots__ = ("order_id", "order_data")
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    ORDER_DATA_FIELD_NUMBER: _ClassVar[int]
+    order_id: str
+    order_data: str
+    def __init__(self, order_id: _Optional[str] = ..., order_data: _Optional[str] = ...) -> None: ...
+
+class OrderInitResponse(_message.Message):
+    __slots__ = ("success", "message")
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    success: bool
+    message: str
+    def __init__(self, success: bool = ..., message: _Optional[str] = ...) -> None: ...

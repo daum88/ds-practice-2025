@@ -19,12 +19,23 @@ class BookSuggestionsStub(object):
                 request_serializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.BookSuggestionsRequest.SerializeToString,
                 response_deserializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.BookSuggestionsResponse.FromString,
                 )
+        self.InitOrder = channel.unary_unary(
+                '/suggestions.BookSuggestions/InitOrder',
+                request_serializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitResponse.FromString,
+                )
 
 
 class BookSuggestionsServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def GetSuggestions(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def InitOrder(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -37,6 +48,11 @@ def add_BookSuggestionsServicer_to_server(servicer, server):
                     servicer.GetSuggestions,
                     request_deserializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.BookSuggestionsRequest.FromString,
                     response_serializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.BookSuggestionsResponse.SerializeToString,
+            ),
+            'InitOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.InitOrder,
+                    request_deserializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -62,5 +78,22 @@ class BookSuggestions(object):
         return grpc.experimental.unary_unary(request, target, '/suggestions.BookSuggestions/GetSuggestions',
             utils_dot_pb_dot_suggestions_dot_suggestions__pb2.BookSuggestionsRequest.SerializeToString,
             utils_dot_pb_dot_suggestions_dot_suggestions__pb2.BookSuggestionsResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def InitOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/suggestions.BookSuggestions/InitOrder',
+            utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitRequest.SerializeToString,
+            utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

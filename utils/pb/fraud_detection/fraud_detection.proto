@@ -2,56 +2,35 @@ syntax = "proto3";
 
 package fraud_detection;
 
-message PaymentInfo {
-  string credit_card_number = 1;
-  string expiration_date = 2;
-  string cvv = 3;
-}
-
-message OrderDetails {
-  repeated string books = 1;
-  double total_amount = 2;
-}
-
-message User {
-  string name = 1;
-  string email = 2;
-  string contact = 3;
-  string address_line1 = 4;
-  string city = 5;
-  string state = 6;
-  string zip_code = 7;
-  string country = 8;
+service FraudDetection {
+    rpc CheckFraud(FraudCheckRequest) returns (FraudCheckResponse);
+    rpc InitOrder(OrderInitRequest) returns (OrderInitResponse);
 }
 
 message FraudCheckRequest {
-  string transaction_id = 1;
-  PaymentInfo payment = 2;
-  OrderDetails order = 3;
-  double amount = 4;
-  User user = 5;
-  string creditCard = 6;
-  string userComment = 7;
-  BillingAddress billingAddress = 8; 
-  string shippingMethod = 9;
-  bool giftWrapping = 10;
-  bool termsAccepted = 11;
-  
-}
-
-message BillingAddress {
-  string street = 1;
-  string city = 2;
-  string state = 3;
-  string zip = 4;
-  string country = 5;
+    string order_id = 1;              // Added field for order id
+    string transaction_id = 2;
+    PaymentInfo payment = 3;
+    int32 amount = 4;
 }
 
 message FraudCheckResponse {
-  bool is_fraudulent = 1;
-  string message = 2;
+    bool is_fraudulent = 1;
+    string message = 2;
 }
 
-service FraudDetection {
-  rpc CheckFraud(FraudCheckRequest) returns (FraudCheckResponse);
+message PaymentInfo {
+    string credit_card_number = 1;
+    string expiration_date = 2;
+    string cvv = 3;
+}
+
+message OrderInitRequest {
+    string order_id = 1;
+    string order_data = 2;
+}
+
+message OrderInitResponse {
+    bool success = 1;
+    string message = 2;
 }
