@@ -19,16 +19,20 @@ import order_queue_pb2_grpc as order_queue_grpc
 
 
 # In-memory queue
-order_queue_instance = Queue()
+from queue import PriorityQueue
+
+# Use PriorityQueue now
+order_queue_instance = PriorityQueue()
 
 class OrderQueueService(order_queue_grpc.OrderQueueServicer):
     def Enqueue(self, request, context):
-        order = {
+        order = (request.priority, {
             'order_id': request.order_id,
-            'order_data': request.order_data
-        }
+            'order_data': request.order_data,
+            'priority': request.priority
+        })
         order_queue_instance.put(order)
-        print(f"✅ Enqueued order {request.order_id}")
+        print(f"✅ Enqueued order {request.order_id} with priority {request.priority}")
         return order_queue.QueueResponse(success=True, message="Order enqueued")
 
     def Dequeue(self, request, context):
@@ -37,9 +41,9 @@ class OrderQueueService(order_queue_grpc.OrderQueueServicer):
             context.set_code(grpc.StatusCode.NOT_FOUND)
             return order_queue.Order()
         
-        order = order_queue_instance.get()
-        print(f"📤 Dequeued order {order['order_id']}")
-        return order_queue.Order(order_id=order['order_id'], order_data=order['order_data'])
+        _, order = order_queue_instance.get()
+        print(f"📤 Dequeued order {order['order_id']} with priority {order['priority']}")
+        return order_queue.Order(order_id=order['order_id'], order_data=order['order_data'], priority=order['priority'])
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor())

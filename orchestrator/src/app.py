@@ -1,3 +1,4 @@
+# orchestrator/src/app.py
 import sys
 import os
 import json
@@ -19,6 +20,7 @@ sys.path.insert(0, pb_base_path)
 sys.path.insert(0, os.path.join(pb_base_path, "fraud_detection"))
 sys.path.insert(0, os.path.join(pb_base_path, "transaction_verification"))
 sys.path.insert(0, os.path.join(pb_base_path, "suggestions"))
+sys.path.insert(0, os.path.join(pb_base_path, "order_queue"))
 
 # --- Import gRPC generated modules ---
 import fraud_detection_pb2 as fraud_detection
@@ -27,10 +29,8 @@ import transaction_verification_pb2 as transaction_verification
 import transaction_verification_pb2_grpc as transaction_verification_grpc
 import suggestions_pb2 as suggestions
 import suggestions_pb2_grpc as suggestions_grpc
-
-# ✅ Correct imports for order_queue
-from order_queue import order_queue_pb2 as order_queue
-from order_queue import order_queue_pb2_grpc as order_queue_grpc
+import order_queue_pb2 as order_queue
+import order_queue_pb2_grpc as order_queue_grpc
 
 # --- Flask app setup ---
 app = Flask(__name__)
@@ -75,10 +75,14 @@ def init_order_suggestions(order_id, data):
         stub = suggestions_grpc.BookSuggestionsStub(ch)
         stub.InitOrder(suggestions.OrderInitRequest(order_id=order_id, order_data=json.dumps(data)))
 
+def determine_priority(data):
+    return data.get("amount", 0) + data.get("numBooks", 1)  # simple heuristic
+
 def enqueue_order(order_id, order_data):
     with grpc.insecure_channel(GRPC_SERVICES['order_queue']) as ch:
         stub = order_queue_grpc.OrderQueueStub(ch)
-        req = order_queue.Order(order_id=order_id, order_data=json.dumps(order_data))  # ✅ This matches your .proto
+        priority = order_data.get("amount", 1)  # Example: larger amount = higher priority
+        req = order_queue.Order(order_id=order_id, order_data=json.dumps(order_data), priority=priority)
         return stub.Enqueue(req)
 
 # --- Service logic ---

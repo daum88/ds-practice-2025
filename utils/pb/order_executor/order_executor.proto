@@ -1,0 +1,12 @@
+syntax = "proto3";
+package order_executor;
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;
+}
+
+service OrderExecutor {
+  rpc HealthCheck(HealthRequest) returns (HealthResponse);
+}

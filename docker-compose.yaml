@@ -18,10 +18,10 @@ services:
       - 8081:5000
     environment:
       - PYTHONUNBUFFERED=TRUE
-      - PYTHONFILE=/app/orchestrator/src/app.py
     volumes:
-      - ./utils:/app/utils
       - ./orchestrator/src:/app/orchestrator/src
+      - ./utils:/app/utils
+
 
   fraud_detection:
     build:
@@ -49,6 +49,20 @@ services:
       - ./utils:/app/utils
       - ./transaction_verification/src:/app/transaction_verification/src
 
+  suggestions:
+    build:
+      context: ./
+      dockerfile: ./suggestions/Dockerfile
+    ports:
+      - 50053:50053
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+      - PYTHONFILE=/app/suggestions/src/app.py
+      - OPENAI_API_KEY={}
+    volumes:
+      - ./utils:/app/utils
+      - ./suggestions/src:/app/suggestions/src
+
   order_queue:
     build:
       context: ./
@@ -62,15 +76,25 @@ services:
       - ./utils:/app/utils
       - ./order_queue/src:/app/order_queue/src
 
-  suggestions:
+  order_executor_1:
     build:
-      context: ./
-      dockerfile: ./suggestions/Dockerfile
-    ports:
-      - 50053:50053
+      context: ./order_executor
     environment:
-      - PYTHONUNBUFFERED=TRUE
-      - PYTHONFILE=/app/suggestions/src/app.py
-      - OPENAI_API_KEY={}
-      - ./utils:/app/utils
-      - ./suggestions/src:/app/suggestions/src
+      - EXECUTOR_ID=1
+      - KNOWN_IDS=1,2
+    volumes:
+      - ./order_executor/src:/app
+      - ./utils/pb/order_queue/order_queue_pb2.py:/app/order_queue_pb2.py
+      - ./utils/pb/order_queue/order_queue_pb2_grpc.py:/app/order_queue_pb2_grpc.py
+
+  order_executor_2:
+    build:
+      context: ./order_executor
+    environment:
+      - EXECUTOR_ID=2
+      - KNOWN_IDS=1,2
+    volumes:
+      - ./order_executor/src:/app
+      - ./utils/pb/order_queue/order_queue_pb2.py:/app/order_queue_pb2.py
+      - ./utils/pb/order_queue/order_queue_pb2_grpc.py:/app/order_queue_pb2_grpc.py
+
