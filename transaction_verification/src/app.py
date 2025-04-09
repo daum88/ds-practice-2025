@@ -21,7 +21,7 @@ class TransactionVerificationService(transaction_verification_grpc.TransactionVe
     def InitOrder(self, request, context):
         orders[request.order_id] = {
             'data': json.loads(request.order_data),
-            'vector_clock': {'transaction_verification': 1}
+            'vector_clock': {'transaction_verification': 0}
         }
         print(f"Initialized order {request.order_id} with vector clock {orders[request.order_id]['vector_clock']}")
         return transaction_verification.OrderInitResponse(success=True, message='Order initialized')

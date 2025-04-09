@@ -99,11 +99,70 @@ services:
       # Check app.py in the suggestions directory to see how this is used
       - PYTHONFILE=/app/suggestions/src/app.py
       #OpenAI API key
-      - OPENAI_API_KEY=${OPEN-AI_API_KEY}
+      - OPENAI_API_KEY=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
     volumes:
       # Mount the utils directory in the current directory to the /app/utils directory in the container
       - ./utils:/app/utils
       # Mount the suggestions/src directory in the current directory to the /app/suggestions/src directory in the container
       - ./suggestions/src:/app/suggestions/src
 
+  order_queue:
+    build:
+      # Use the current directory as the build context
+      # This allows us to access the files in the current directory inside the Dockerfile
+      context: ./
+      # Use the Dockerfile in the fraud_detection directorys
+      dockerfile: ./order_queue/Dockerfile
+    ports:
+      # Expose port 50051 on the host, and map port 50051 of the container to port 50051 on the host
+      - 50054:50054
+    environment:
+      # Pass the environment variables to the container
+      # The PYTHONUNBUFFERED environment variable ensures that the output from the application is logged to the console
+      - PYTHONUNBUFFERED=TRUE
+      # The PYTHONFILE environment variable specifies the absolute entry point of the application
+      # Check app.py in the suggestions directory to see how this is used
+      - PYTHONFILE=/app/order_queue/src/app.py
+    volumes:
+      # Mount the utils directory in the current directory to the /app/utils directory in the container
+      - ./utils:/app/utils
+      # Mount the suggestions/src directory in the current directory to the /app/suggestions/src directory in the container
+      - ./order_queue/src:/app/order_queue/src
+
+
+# Executor replica #1
+  order_executor1:
+    build:
+      context: ./
+      dockerfile: ./order_executor/Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+      - PYTHONFILE=/app/order_executor/src/app.py
+      # Leader election variables
+      - INSTANCE_ID=executor1
+      - EXECUTOR_IDS=executor1,executor2
+      - ORDER_QUEUE_ADDR=order_queue:50054
+    volumes:
+      - ./utils:/app/utils
+      - ./order_executor/src:/app/order_executor/src
+    depends_on:
+      - order_queue
+
+  # Executor replica #2
+  order_executor2:
+    build:
+      context: ./
+      dockerfile: ./order_executor/Dockerfile
+    environment:
+      - PYTHONUNBUFFERED=TRUE
+      - PYTHONFILE=/app/order_executor/src/app.py
+      # Leader election variables
+      - INSTANCE_ID=executor2
+      - EXECUTOR_IDS=executor1,executor2
+      - ORDER_QUEUE_ADDR=order_queue:50054
+    volumes:
+      - ./utils:/app/utils
+      - ./order_executor/src:/app/order_executor/src
+    depends_on:
+      - order_queue
     

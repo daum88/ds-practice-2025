@@ -18,7 +18,7 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
     def InitOrder(self, request, context):
         orders[request.order_id] = {
             'data': json.loads(request.order_data),
-            'vector_clock': {'fraud_detection': 1}
+            'vector_clock': {'fraud_detection': 0}
         }
         print(f"Initialized order {request.order_id} with vector clock {orders[request.order_id]['vector_clock']}")
         return fraud_detection.OrderInitResponse(success=True, message='Order initialized')
@@ -46,7 +46,7 @@ class FraudDetectionService(fraud_detection_grpc.FraudDetectionServicer):
         else:
             response.is_fraudulent = False
             response.message = "✅ Transaction is legitimate."
-        print(f"Transaction {request.transaction_id}: {response.message}")
+        print(f"Transaction Verified: {response.message}")
         return response
 
 def serve():

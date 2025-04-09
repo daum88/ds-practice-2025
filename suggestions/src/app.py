@@ -19,11 +19,20 @@ openai.api_key = os.getenv("OPENAI_API_KEY", "")
 # In-memory store for caching orders and tracking vector clocks
 orders = {}
 
+# Fallback static list of books
+BOOKS_LIST = [
+    {"title": "1984", "author": "George Orwell"},
+    {"title": "To Kill a Mockingbird", "author": "Harper Lee"},
+    {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
+    {"title": "Pride and Prejudice", "author": "Jane Austen"},
+    {"title": "The Catcher in the Rye", "author": "J.D. Salinger"}
+]
+
 class BookSuggestionsService(suggestions_grpc.BookSuggestionsServicer):
     def InitOrder(self, request, context):
         orders[request.order_id] = {
             'data': json.loads(request.order_data),
-            'vector_clock': {'suggestions': 1}
+            'vector_clock': {'suggestions': 0}
         }
         logging.info(f"Initialized order {request.order_id} with vector clock {orders[request.order_id]['vector_clock']}")
         return suggestions.OrderInitResponse(success=True, message='Order initialized')

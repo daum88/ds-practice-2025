@@ -16,9 +16,11 @@ FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
 transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
 suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
+order_queue_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_queue'))
 sys.path.insert(0, fraud_detection_grpc_path)
 sys.path.insert(0, transaction_verification_grpc_path)
 sys.path.insert(0, suggestions_grpc_path)
+sys.path.insert(0, order_queue_grpc_path)
 
 import fraud_detection_pb2 as fraud_detection
 import fraud_detection_pb2_grpc as fraud_detection_grpc
@@ -26,6 +28,8 @@ import transaction_verification_pb2 as transaction_verification
 import transaction_verification_pb2_grpc as transaction_verification_grpc
 import suggestions_pb2 as suggestions
 import suggestions_pb2_grpc as suggestions_grpc
+import order_queue_pb2 as order_queue
+import order_queue_pb2_grpc as order_queue_grpc
 
 # Create Flask app
 app = Flask(__name__)
@@ -35,7 +39,8 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 GRPC_SERVICES = {
     "fraud_detection": "fraud_detection:50051",
     "transaction_verification": "transaction_verification:50052",
-    "suggestions": "suggestions:50053"
+    "suggestions": "suggestions:50053",
+    "order_queue": "order_queue:50054"
 }
 
 # Initialize in-memory store for orders
@@ -45,9 +50,9 @@ def init_order(order_id, data):
     orders[order_id] = {
         'data': data,
         'vector_clock': {
-            'fraud_detection': 1,
-            'transaction_verification': 1,
-            'suggestions': 1
+            'fraud_detection': 0,
+            'transaction_verification': 0,
+            'suggestions': 0
         }
     }
     print(f"Initialized order {order_id} with vector clock {orders[order_id]['vector_clock']}")
@@ -78,11 +83,21 @@ def init_order_suggestions(order_id, data):
         stub.InitOrder(suggestions.OrderInitRequest(order_id=order_id, order_data=json.dumps(data)))
 
 
+def enqueue_order(order_id, data, priority=5):
+    with grpc.insecure_channel(GRPC_SERVICES["order_queue"]) as channel:
+        stub = order_queue_grpc.OrderQueueStub(channel)
+        req = order_queue.OrderQueueRequest(
+            order_id=order_id,
+            priority=priority,
+            order_data=json.dumps(data)
+        )
+        return stub.Enqueue(req)
+
 def check_fraud(request_data):
     with grpc.insecure_channel(GRPC_SERVICES["fraud_detection"]) as channel:
         stub = fraud_detection_grpc.FraudDetectionStub(channel)
         req = fraud_detection.FraudCheckRequest(
-            order_id=request_data.get("transactionId", "12345"),  # Pass the order_id here
+            order_id=request_data.get("order_id", "12345"),  # Pass the order_id here
             transaction_id=request_data.get("transactionId", "12345"),
             payment=fraud_detection.PaymentInfo(
                 credit_card_number=request_data.get("creditCard", {}).get("number", ""),
@@ -127,9 +142,11 @@ def get_suggestions(num_books, order_id):
 @app.route('/checkout', methods=['POST'])
 def checkout():
     request_data = json.loads(request.data)
-    transaction_id = request_data.get("transactionId", str(uuid.uuid4()))
+    #print(request_data)
+    transaction_id =  str(uuid.uuid4())  # Generate a unique transaction ID
+    request_data["transactionId"] = transaction_id  # Add transactionId to the request data
     order_id = transaction_id  # Using transactionId as order_id
-    num_books = request_data.get("numBooks", 3)
+    num_books = len(request_data.get("items", []))
     
     # Inject order_id into the request_data for ValidateTransaction as well
     request_data["order_id"] = order_id
@@ -164,6 +181,14 @@ def checkout():
     else:
         status = 'Order Approved'
         suggested_books = suggestions_result
+
+        #simple logic: if numbooks>2 => priority=1, else=5
+        priority = 1 if len(request_data.get("items", [])) > 2 else 5
+        queue_response = enqueue_order(order_id, request_data, priority)
+        if not queue_response.success:
+            print(f"[Orchestrator] Could not enqueue order {order_id}. Reason: {queue_response.message}")
+        else:
+            print(f"[Orchestrator] Order {order_id} enqueued with priority {priority}.")
 
     return jsonify({
         'orderId': order_id,

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package orderqueue;
+
+import "google/protobuf/empty.proto";
+
+service OrderQueue {
+  // Enqueues an order with its priority and data
+  rpc Enqueue(OrderQueueRequest) returns (OrderQueueResponse);
+  // Dequeues the highest-priority order (lowest numeric priority)
+  rpc Dequeue(google.protobuf.Empty) returns (OrderQueueOrder);
+}
+
+message OrderQueueRequest {
+  string order_id = 1;      // e.g., '818849bd-dc2e-4e62-a9c9-78d88116141b'
+  int32 priority = 2;       // Lower => higher priority
+  string order_data = 3;    // JSON or anything you want
+}
+
+message OrderQueueResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+message OrderQueueOrder {
+  string order_id = 1;
+  int32 priority = 2;
+  string order_data = 3;
+}
