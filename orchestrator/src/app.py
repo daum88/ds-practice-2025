@@ -28,11 +28,11 @@ import suggestions_pb2_grpc as sugg_grpc
 import order_queue_pb2 as queue_pb
 import order_queue_pb2_grpc as queue_grpc
 
-# Create Flask app
+# Create Flask app and enable CORS.
 app = Flask(__name__)
 CORS(app, resources={r'/*': {'origins': '*'}})
 
-# Define gRPC service addresses
+# Define gRPC service addresses.
 GRPC_SERVICES = {
     "fraud_detection": "fraud_detection:50051",
     "transaction_verification": "transaction_verification:50052",
@@ -40,23 +40,20 @@ GRPC_SERVICES = {
     "order_queue": "order_queue:50054"
 }
 
-# For convenience, define indexes for each service in our local vector clock:
+# Define vector clock indexes.
 IDX_TRANSACTION = 0
 IDX_FRAUD       = 1
 IDX_SUGGESTIONS = 2
 
-# Local store for orders
+# In-memory storage for orders.
 orders = {}
-# orders[order_id] = {
-#   "data": {...},
-#   "vc": [0,0,0]   # orchestrator's local vector clock
-# }
+# Each order is stored as: orders[order_id] = {"data": <order data>, "vc": [0,0,0]}
 
 def merge_vc(local_vc, incoming_vc):
     for i in range(len(local_vc)):
         local_vc[i] = max(local_vc[i], incoming_vc[i])
 
-# --------------- gRPC stub helper functions ---------------
+# gRPC stub helper functions.
 def get_transaction_stub():
     channel = grpc.insecure_channel(GRPC_SERVICES["transaction_verification"])
     return tx_grpc.TransactionVerificationStub(channel)
@@ -73,7 +70,7 @@ def get_order_queue_stub():
     channel = grpc.insecure_channel(GRPC_SERVICES["order_queue"])
     return queue_grpc.OrderQueueStub(channel)
 
-# Function to call OrderQueue to enqueue a valid order.
+# Enqueue an order with a given priority.
 def enqueue_order(order_id, data, priority=5):
     with grpc.insecure_channel(GRPC_SERVICES["order_queue"]) as channel:
         stub = queue_grpc.OrderQueueStub(channel)
@@ -84,21 +81,21 @@ def enqueue_order(order_id, data, priority=5):
         )
         return stub.Enqueue(req)
 
-# --------------- End of gRPC helpers ---------------
-
 @app.route('/checkout', methods=['POST'])
 def checkout():
     """
-    Orchestrates the new flow of events (a–f) with partial concurrency.
-    If any event fails, we broadcast ClearOrder to all services with the final VC and stop.
-    If all succeed, we enqueue the order in the Order Queue and then return the suggestions to the user.
+    Orchestrates events (a–f) with partial concurrency. If any event fails,
+    broadcasts ClearOrder to all services with the final vector clock. If all succeed,
+    enqueues the order with a priority (based on the number of items) and returns the order ID
+    and suggested books to the user. The final JSON response uses the status string
+    "Order Approved" (so that the frontend displays the response in green).
     """
-    # Force JSON parsing (in case Content-Type header is missing)
+    # Force JSON parsing.
     req_data = request.get_json(force=True)
     if not req_data:
         return jsonify({"error": "Invalid JSON payload"}), 400
 
-    # Augment request data if necessary (e.g. ensuring user address exists)
+    # Ensure the "user" field contains an "address".
     if "user" in req_data:
         if "address" not in req_data["user"] or not req_data["user"]["address"]:
             billing = req_data.get("billingAddress", {})
@@ -109,27 +106,22 @@ def checkout():
     order_id = str(uuid.uuid4())
     req_data["order_id"] = order_id
 
-    # Initialize orchestrator local record for the order.
-    orders[order_id] = {
-        "data": req_data,
-        "vc": [0, 0, 0]
-    }
+    # Save order data with an initial vector clock.
+    orders[order_id] = {"data": req_data, "vc": [0, 0, 0]}
     local_vc = orders[order_id]["vc"]
 
-    # 1) Initialize order in all services.
+    # Initialize order in all services.
     init_in_all_services(order_id, req_data)
 
-    # 2) Run events (a) and (b) concurrently.
+    # Run events (a) and (b) concurrently.
     executor = ThreadPoolExecutor(max_workers=6)
     futures = {}
 
-    # (a) Transaction: VerifyItems.
     def event_a():
         stub = get_transaction_stub()
         req = tx_pb.OrderEventRequest(order_id=order_id, vector_clock=local_vc)
         return stub.VerifyItems(req)
 
-    # (b) Transaction: VerifyUserData.
     def event_b():
         stub = get_transaction_stub()
         req = tx_pb.OrderEventRequest(order_id=order_id, vector_clock=local_vc)
@@ -140,7 +132,6 @@ def checkout():
 
     final_status = {"ok": True, "message": "", "suggestions": []}
 
-    # Once (a) completes, if successful, do (c): VerifyCreditCard.
     def handle_a_result():
         a_resp = futures['a'].result()
         merge_vc(local_vc, a_resp.updated_vc)
@@ -156,7 +147,6 @@ def checkout():
             final_status["ok"] = False
             final_status["message"] = f"(c) failed: {c_resp.message}"
 
-    # Once (b) completes, if successful, do (d): Fraud CheckUserData.
     def handle_b_result():
         b_resp = futures['b'].result()
         merge_vc(local_vc, b_resp.updated_vc)
@@ -185,7 +175,6 @@ def checkout():
             "suggestedBooks": []
         })
 
-    # (e) Fraud: CheckCreditCard in fraud service.
     def event_e():
         stub = get_fraud_stub()
         req = fraud_pb.OrderEventRequest(order_id=order_id, vector_clock=local_vc)
@@ -203,7 +192,7 @@ def checkout():
             "suggestedBooks": []
         })
 
-    # (f) Suggestions: Get AI suggestions
+    # (f) Suggestions: Get AI suggestions.
     def event_f():
         stub = get_suggestions_stub()
         req = sugg_pb.GenerateSuggestionsRequest(
@@ -240,7 +229,7 @@ def checkout():
         else:
             suggested_books = [{"title": b.title, "author": b.author} for b in f_resp.books]
 
-    # Enqueue the order in the OrderQueue.
+    # Calculate priority based on the number of items: more than 2 items get a higher priority.
     item_count = len(req_data.get("items", []))
     priority = 1 if item_count > 2 else 5
     queue_response = enqueue_order(order_id, req_data, priority)
@@ -251,7 +240,7 @@ def checkout():
 
     broadcast_clear(order_id, local_vc)
 
-    # IMPORTANT: Return status exactly "Order Approved" so that frontend shows green.
+    # Return JSON response with order ID, status, and suggested books.
     return jsonify({
         "orderId": order_id,
         "status": "Order Approved",
@@ -260,7 +249,7 @@ def checkout():
 
 def init_in_all_services(order_id, data):
     """
-    Calls InitOrder in each microservice to cache data & initialize vector clocks.
+    Calls InitOrder in each microservice to cache order data & initialize vector clocks.
     """
     with grpc.insecure_channel(GRPC_SERVICES["transaction_verification"]) as ch:
         stub = tx_grpc.TransactionVerificationStub(ch)
@@ -274,7 +263,8 @@ def init_in_all_services(order_id, data):
 
 def broadcast_clear(order_id, final_vc):
     """
-    Broadcasts a ClearOrder message to all services with the final vector clock.
+    Broadcasts a ClearOrder message to all services with the final vector clock,
+    and then removes the order from the local store.
     """
     print(f"[Orchestrator] Broadcasting ClearOrder({order_id}) with final VC={final_vc}")
     try:
