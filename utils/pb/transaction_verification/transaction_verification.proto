@@ -2,7 +2,6 @@ syntax = "proto3";
 
 package transaction_verification;
 
-// User details
 message User {
   string name = 1;
   string email = 2;
@@ -14,20 +13,17 @@ message User {
   string country = 8;
 }
 
-// Payment information
 message PaymentInfo {
   string credit_card_number = 1;
   string expiration_date = 2;
   string cvv = 3;
 }
 
-// Shipping details
 message ShippingInfo {
   string shippingMethod = 1;
   bool gift_wrapping = 2;
 }
 
-// Order details
 message Book {
   string name = 1;
   int32 quantity = 2;
@@ -40,7 +36,6 @@ message OrderDetails {
   string comment = 3;
 }
 
-// Billing address details
 message BillingAddress {
   string street = 1;
   string city = 2;
@@ -49,7 +44,7 @@ message BillingAddress {
   string country = 5;
 }
 
-// Transaction request
+
 message TransactionValidationRequest {
   string transaction_id = 1;
   User user = 2;
@@ -58,19 +53,20 @@ message TransactionValidationRequest {
   OrderDetails order = 5;
   string creditCard = 6;
   string userComment = 7;
-  repeated Book items = 8; 
-  BillingAddress billingAddress = 9; 
+  repeated Book items = 8;
+  BillingAddress billingAddress = 9;
   bool giftWrapping = 10;
   bool termsAccepted = 11;
   string author = 12;
-  string order_id = 13;   // <<< Added field for order ID
+  string order_id = 13; // for associating with the new flow
 }
 
-// Response
 message TransactionValidationResponse {
   bool valid = 1;
   string message = 2;
 }
+
+// Order initialization
 
 message OrderInitRequest {
   string order_id = 1;
@@ -82,7 +78,43 @@ message OrderInitResponse {
   string message = 2;
 }
 
+
+message OrderEventRequest {
+  string order_id = 1;
+  repeated int32 vector_clock = 2;  // e.g. [0,0,0]
+}
+
+message OrderEventResponse {
+  bool success = 1;
+  string message = 2;
+  repeated int32 updated_vc = 3;   // the service's new vector clock after merging + incrementing
+}
+
+
+message ClearOrderRequest {
+  string order_id = 1;
+  repeated int32 final_vc = 2;
+}
+
+message ClearOrderResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+
+// The service definition
 service TransactionVerification {
+  // Old single-call approach (optional):
   rpc ValidateTransaction(TransactionValidationRequest) returns (TransactionValidationResponse);
+
+  // Init / store data
   rpc InitOrder(OrderInitRequest) returns (OrderInitResponse);
+
+  // New event-based calls
+  rpc VerifyItems(OrderEventRequest) returns (OrderEventResponse);
+  rpc VerifyUserData(OrderEventRequest) returns (OrderEventResponse);
+  rpc VerifyCreditCard(OrderEventRequest) returns (OrderEventResponse);
+
+  // Final cleanup
+  rpc ClearOrder(ClearOrderRequest) returns (ClearOrderResponse);
 }
