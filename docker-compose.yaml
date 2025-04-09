@@ -99,7 +99,7 @@ services:
       # Check app.py in the suggestions directory to see how this is used
       - PYTHONFILE=/app/suggestions/src/app.py
       #OpenAI API key
-      - OPENAI_API_KEY=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
+      - OPENAI_API_KEY=${YOUR_OPENAI_API_KEY}
     volumes:
       # Mount the utils directory in the current directory to the /app/utils directory in the container
       - ./utils:/app/utils
