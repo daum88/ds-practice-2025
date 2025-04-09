@@ -106,9 +106,7 @@ services:
       # Mount the suggestions/src directory in the current directory to the /app/suggestions/src directory in the container
       - ./suggestions/src:/app/suggestions/src
 
-<<<<<<< Updated upstream
-    
-=======
+
   order_queue:
     build:
       # Use the current directory as the build context
@@ -160,5 +158,4 @@ services:
       - ./order_executor/src:/app/order_executor/src
     depends_on:
       - order_queue
-
   

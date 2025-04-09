@@ -13,9 +13,11 @@ FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 fraud_detection_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/fraud_detection'))
 transaction_verification_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/transaction_verification'))
 suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
+order_queue_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_queue'))
 sys.path.insert(0, fraud_detection_grpc_path)
 sys.path.insert(0, transaction_verification_grpc_path)
 sys.path.insert(0, suggestions_grpc_path)
+sys.path.insert(0, order_queue_grpc_path)
 
 import fraud_detection_pb2 as fraud_pb
 import fraud_detection_pb2_grpc as fraud_grpc
@@ -34,7 +36,8 @@ CORS(app, resources={r'/*': {'origins': '*'}})
 GRPC_SERVICES = {
     "fraud_detection": "fraud_detection:50051",
     "transaction_verification": "transaction_verification:50052",
-    "suggestions": "suggestions:50053"
+    "suggestions": "suggestions:50053",
+    "order_queue": "order_queue:50054"
 }
 
 # For convenience, define indexes for each service in our local vector clock:
