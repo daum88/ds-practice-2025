@@ -27,18 +27,6 @@ def merge_and_increment(local_vc, incoming_vc):
 
 orders = {}
 
-<<<<<<< Updated upstream
-class BookSuggestionsService(suggestions_grpc.BookSuggestionsServicer):
-    def InitOrder(self, request, context):
-        orders[request.order_id] = {
-            'data': json.loads(request.order_data),
-            'vector_clock': {'suggestions': 1}
-        }
-        logging.info(f"Initialized order {request.order_id} with vector clock {orders[request.order_id]['vector_clock']}")
-        return suggestions.OrderInitResponse(success=True, message='Order initialized')
-
-    def GetSuggestions(self, request, context):
-=======
 # Fallback static list
 BOOKS_LIST = [
     {"title": "1984", "author": "George Orwell"},
@@ -50,7 +38,6 @@ BOOKS_LIST = [
 
 class BookSuggestionsService(suggestions_grpc.BookSuggestionsServicer):
     def InitOrder(self, request, context):
->>>>>>> Stashed changes
         order_id = request.order_id
         orders[order_id] = {
             'data': json.loads(request.order_data),

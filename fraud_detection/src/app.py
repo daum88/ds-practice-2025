@@ -35,17 +35,6 @@ orders = {}
 
 class FraudDetectionService(fraud_grpc.FraudDetectionServicer):
     def InitOrder(self, request, context):
-<<<<<<< Updated upstream
-        orders[request.order_id] = {
-            'data': json.loads(request.order_data),
-            'vector_clock': {'fraud_detection': 1}
-        }
-        print(f"Initialized order {request.order_id} with vector clock {orders[request.order_id]['vector_clock']}")
-        return fraud_detection.OrderInitResponse(success=True, message='Order initialized')
-
-    def CheckFraud(self, request, context):
-=======
->>>>>>> Stashed changes
         order_id = request.order_id
         orders[order_id] = {
             'data': json.loads(request.order_data),
@@ -139,19 +128,12 @@ class FraudDetectionService(fraud_grpc.FraudDetectionServicer):
             print(f"[FraudSvc] ClearOrder => {order_id} removed successfully.")
             return fraud_pb.ClearOrderResponse(success=True, message="Order cleared.")
         else:
-<<<<<<< Updated upstream
-            response.is_fraudulent = False
-            response.message = "✅ Transaction is legitimate."
-        print(f"Transaction {request.transaction_id}: {response.message}")
-        return response
-=======
             print(f"[FraudSvc] ClearOrder => local VC {local_vc} > final VC {final_vc}, ERROR.")
             return fraud_pb.ClearOrderResponse(
                 success=False,
                 message="Local VC is ahead of final VC => cannot clear order yet."
             )
 
->>>>>>> Stashed changes
 
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor())

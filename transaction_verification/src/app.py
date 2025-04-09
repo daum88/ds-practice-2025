@@ -43,11 +43,7 @@ class TransactionVerificationService(transaction_grpc.TransactionVerificationSer
         order_id = request.order_id
         orders[order_id] = {
             'data': json.loads(request.order_data),
-<<<<<<< Updated upstream
-            'vector_clock': {'transaction_verification': 1}
-=======
             'vc': [0,0,0]
->>>>>>> Stashed changes
         }
         print(f"[TransactionSvc] InitOrder {order_id} => VC={orders[order_id]['vc']}")
         return transaction_pb.OrderInitResponse(success=True, message='Order initialized')
