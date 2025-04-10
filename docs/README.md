@@ -6,7 +6,9 @@
 ├── docs/                     # Documentation and architecture diagrams
 │   ├── README.md
 │   ├── Architecture_diagram.png
-│   └── System-diagram.jpg
+│   ├── System-diagram.jpg
+│   ├── Vector_clocks_diagram.jpg
+│   └── Leader_election_diagram.jpg
 │ 
 ├── frontend/                 # Frontend microservice
 │   ├── src/
@@ -14,6 +16,18 @@
 │   ├── Dockerfile
 │ 
 ├── orchestrator/             # Orchestrator microservice
+│   ├── src/
+│       ├── app.py
+│   ├── Dockerfile
+│   ├── requirements.txt
+│ 
+├── order_executor/             # Order executor microservice
+│   ├── src/
+│       ├── app.py
+│   ├── Dockerfile
+│   ├── requirements.txt
+│ 
+├── order_queue/             # Order queue microservice
 │   ├── src/
 │       ├── app.py
 │   ├── Dockerfile
@@ -47,5 +61,15 @@
 
 ### System diagram
 ![System-diagram](https://github.com/user-attachments/assets/f5dd5430-fbfe-41a0-a885-d22542e94b29)
+
+### Vector clocks diagram
+![VectorClocks-diagram](https://github.com/user-attachments/assets/f5dd5430-fbfe-41a0-a885-d22542e94b29)
+
+### Leader election diagram
+![Leader_election-diagram](https://github.com/user-attachments/assets/f5dd5430-fbfe-41a0-a885-d22542e94b29)
+
+
+
+
 
 
