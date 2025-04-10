@@ -10,44 +10,63 @@ from concurrent import futures
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
 suggestions_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/suggestions'))
 sys.path.insert(0, suggestions_grpc_path)
-import suggestions_pb2 as suggestions
+
+import suggestions_pb2 as suggestions_pb
 import suggestions_pb2_grpc as suggestions_grpc
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s: %(message)s')
 openai.api_key = os.getenv("OPENAI_API_KEY", "")
 
-# In-memory store for caching orders and tracking vector clocks
+# We'll assume Suggestions service is index 2 in the VC.
+SVC_IDX = 2
+def merge_and_increment(local_vc, incoming_vc):
+    for i in range(len(local_vc)):
+        local_vc[i] = max(local_vc[i], incoming_vc[i])
+    local_vc[SVC_IDX] += 1
+    return local_vc
+
 orders = {}
 
-# Fallback book list (shared by all requests)
+# Fallback static list
 BOOKS_LIST = [
-    {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
     {"title": "1984", "author": "George Orwell"},
     {"title": "To Kill a Mockingbird", "author": "Harper Lee"},
+    {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
     {"title": "Pride and Prejudice", "author": "Jane Austen"},
-    {"title": "Moby-Dick", "author": "Herman Melville"},
+    {"title": "The Catcher in the Rye", "author": "J.D. Salinger"}
 ]
 
 class BookSuggestionsService(suggestions_grpc.BookSuggestionsServicer):
     def InitOrder(self, request, context):
-        orders[request.order_id] = {
-            'data': json.loads(request.order_data),
-            'vector_clock': {'suggestions': 1}
-        }
-        logging.info(f"Initialized order {request.order_id} with vector clock {orders[request.order_id]['vector_clock']}")
-        return suggestions.OrderInitResponse(success=True, message='Order initialized')
-
-    def GetSuggestions(self, request, context):
         order_id = request.order_id
-        if order_id in orders:
-            orders[order_id]['vector_clock']['suggestions'] += 1
-            logging.info(f"Vector clock for {order_id}: {orders[order_id]['vector_clock']}")
-        else:
-            logging.warning(f"GetSuggestions called for uninitialized order {order_id}")
+        orders[order_id] = {
+            'data': json.loads(request.order_data),
+            'vc': [0, 0, 0]
+        }
+        logging.info(f"[SuggestionsSvc] InitOrder {order_id} => VC={orders[order_id]['vc']}")
+        return suggestions_pb.OrderInitResponse(success=True, message='Order initialized')
 
-        # Suggestion logic
+    def GenerateSuggestions(self, request, context):
+        """
+        Event (f): produce suggestions for the user’s items or topic.
+        """
+        order_id = request.order_id
+        incoming_vc = list(request.vector_clock)
+        if order_id not in orders:
+            return suggestions_pb.GenerateSuggestionsResponse(
+                success=False,
+                message="Order not found in suggestions service",
+                updated_vc=incoming_vc,
+                books=[]
+            )
+
+        local_vc = orders[order_id]['vc']
+        updated_vc = merge_and_increment(local_vc, incoming_vc)
+        logging.info(f"[SuggestionsSvc] GenerateSuggestions => merged VC={updated_vc}")
+
+        num_books = request.num_books
         try:
-            prompt = f"Please suggest {request.num_books} book{'s' if request.num_books != 1 else ''}. Return only a JSON array of objects with title and author."
+            prompt = f"Please suggest {num_books} book(s). Return only a JSON array of objects with title and author."
             resp = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
@@ -58,19 +77,54 @@ class BookSuggestionsService(suggestions_grpc.BookSuggestionsServicer):
                 max_tokens=200
             )
             raw = resp.choices[0].message["content"].replace('```', '').strip()
-            books = json.loads(raw[raw.find('['):raw.rfind(']')+1])
+            # Parse JSON from the raw string.
+            books = json.loads(raw[raw.find('['): raw.rfind(']')+1])
         except Exception as e:
-            logging.error(f"AI suggestions failed ({e}); falling back to static list")
+            logging.error(f"AI suggestions failed ({e}); using fallback list.")
             from random import sample
-            books = sample(BOOKS_LIST, min(request.num_books, len(BOOKS_LIST)))
+            books = sample(BOOKS_LIST, min(num_books, len(BOOKS_LIST)))
 
-        response = suggestions.BookSuggestionsResponse()
-        response.books.extend([suggestions.Book(title=b['title'], author=b['author']) for b in books])
+        # Build response using GenerateSuggestionsResponse.
+        response = suggestions_pb.GenerateSuggestionsResponse(
+            success=True,
+            message="Suggestions generated",
+            updated_vc=updated_vc
+        )
+        for b in books:
+            bk = suggestions_pb.Book(title=b.get('title', 'Untitled'), author=b.get('author', 'Unknown'))
+            response.books.append(bk)
         return response
 
+    def ClearOrder(self, request, context):
+        """
+        Final broadcast from orchestrator to clear local data if local VC <= final VC.
+        """
+        order_id = request.order_id
+        final_vc = list(request.final_vc)
+        if order_id not in orders:
+            return suggestions_pb.ClearOrderResponse(
+                success=False,
+                message="Order not found in suggestions."
+            )
+
+        local_vc = orders[order_id]['vc']
+        can_clear = all(local_vc[i] <= final_vc[i] for i in range(len(local_vc)))
+        if can_clear:
+            del orders[order_id]
+            logging.info(f"[SuggestionsSvc] ClearOrder => {order_id} removed successfully.")
+            return suggestions_pb.ClearOrderResponse(success=True, message="Order cleared.")
+        else:
+            logging.info(f"[SuggestionsSvc] ClearOrder => local VC {local_vc} > final VC {final_vc}, cannot clear.")
+            return suggestions_pb.ClearOrderResponse(
+                success=False,
+                message="Local VC is ahead of final VC => cannot clear order yet."
+            )
+
 def serve():
-    server = grpc.server(futures.ThreadPoolExecutor())
-    suggestions_grpc.add_BookSuggestionsServicer_to_server(BookSuggestionsService(), server)
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    suggestions_grpc.add_BookSuggestionsServicer_to_server(
+        BookSuggestionsService(), server
+    )
     server.add_insecure_port('[::]:50053')
     server.start()
     logging.info("Book Suggestions Server started on port 50053.")

@@ -1,57 +1,68 @@
 import sys
 import os
-import json
+import threading
+import heapq
 import grpc
 from concurrent import futures
-from queue import Queue
 
-# Add both pb and pb/order_queue to sys.path
-sys.path.insert(0, os.path.abspath("/app/utils"))
-sys.path.insert(0, os.path.abspath("/app/utils/pb"))
-
-
-# Import the gRPC stubs
+# Adjust import paths if needed
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
-order_queue_grpc_path = os.path.abspath(os.path.join(FILE, '../../../utils/pb/order_queue'))
+order_queue_grpc_path = os.path.abspath(os.path.join(FILE, "../../../utils/pb/order_queue"))
 sys.path.insert(0, order_queue_grpc_path)
-import order_queue_pb2 as order_queue
-import order_queue_pb2_grpc as order_queue_grpc
 
+import order_queue_pb2 as queue_pb
+import order_queue_pb2_grpc as queue_grpc
 
-# In-memory queue
-from queue import PriorityQueue
+class OrderQueueService(queue_grpc.OrderQueueServicer):
+    def __init__(self):
+        self._lock = threading.Lock()
+        # We'll store (negativePriority, orderId, orderData) so that the
+        # highest actual priority is popped first
+        self._queue = []  
 
-# Use PriorityQueue now
-order_queue_instance = PriorityQueue()
-
-class OrderQueueService(order_queue_grpc.OrderQueueServicer):
     def Enqueue(self, request, context):
-        order = (request.priority, {
-            'order_id': request.order_id,
-            'order_data': request.order_data,
-            'priority': request.priority
-        })
-        order_queue_instance.put(order)
-        print(f"✅ Enqueued order {request.order_id} with priority {request.priority}")
-        return order_queue.QueueResponse(success=True, message="Order enqueued")
+        """
+        Insert the new order (with priority) into our heap.
+        """
+        with self._lock:
+            # Python heapq is a min-heap, so store negative priority if you want "max-heap" behavior
+            priority = request.priority
+            heapq.heappush(self._queue, (-priority, request.order_id, request.order_data))
+
+        return queue_pb.OrderQueueResponse(
+            success=True,
+            message=f"Order {request.order_id} enqueued with priority {priority}."
+        )
 
     def Dequeue(self, request, context):
-        if order_queue_instance.empty():
-            context.set_details("Queue is empty")
-            context.set_code(grpc.StatusCode.NOT_FOUND)
-            return order_queue.Order()
-        
-        _, order = order_queue_instance.get()
-        print(f"📤 Dequeued order {order['order_id']} with priority {order['priority']}")
-        return order_queue.Order(order_id=order['order_id'], order_data=order['order_data'], priority=order['priority'])
+        """
+        Pop the top order if available, else indicate that queue is empty.
+        """
+        with self._lock:
+            if not self._queue:
+                return queue_pb.OrderDequeueResponse(
+                    success=False,
+                    order_id="",
+                    order_data="",
+                    message="Queue is empty."
+                )
+            top = heapq.heappop(self._queue)
+            # top = (negPriority, order_id, order_data)
+            neg_priority, order_id, order_data = top
+            return queue_pb.OrderDequeueResponse(
+                success=True,
+                order_id=order_id,
+                order_data=order_data,
+                message="Dequeued OK"
+            )
 
-def serve():
-    server = grpc.server(futures.ThreadPoolExecutor())
-    order_queue_grpc.add_OrderQueueServicer_to_server(OrderQueueService(), server)
-    server.add_insecure_port('[::]:50054')
+def serve_queue_service():
+    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
+    queue_grpc.add_OrderQueueServicer_to_server(OrderQueueService(), server)
+    server.add_insecure_port('[::]:50054')  # or whichever port you like
     server.start()
-    print("📦 Order Queue Server started on port 50054.")
+    print("Order Queue Server started on port 50054.")
     server.wait_for_termination()
 
-if __name__ == '__main__':
-    serve()
+if __name__ == "__main__":
+    serve_queue_service()

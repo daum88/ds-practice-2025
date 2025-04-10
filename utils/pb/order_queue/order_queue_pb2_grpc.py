@@ -2,11 +2,12 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import order_queue_pb2 as order__queue__pb2
+import order_queue_pb2 as utils_dot_pb_dot_order__queue_dot_order__queue__pb2
 
 
 class OrderQueueStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """The OrderQueue service definition
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -16,18 +17,19 @@ class OrderQueueStub(object):
         """
         self.Enqueue = channel.unary_unary(
                 '/order_queue.OrderQueue/Enqueue',
-                request_serializer=order__queue__pb2.Order.SerializeToString,
-                response_deserializer=order__queue__pb2.QueueResponse.FromString,
+                request_serializer=utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderQueueRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderQueueResponse.FromString,
                 )
         self.Dequeue = channel.unary_unary(
                 '/order_queue.OrderQueue/Dequeue',
-                request_serializer=order__queue__pb2.Empty.SerializeToString,
-                response_deserializer=order__queue__pb2.Order.FromString,
+                request_serializer=utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderDequeueRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderDequeueResponse.FromString,
                 )
 
 
 class OrderQueueServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """The OrderQueue service definition
+    """
 
     def Enqueue(self, request, context):
         """Missing associated documentation comment in .proto file."""
@@ -46,13 +48,13 @@ def add_OrderQueueServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Enqueue': grpc.unary_unary_rpc_method_handler(
                     servicer.Enqueue,
-                    request_deserializer=order__queue__pb2.Order.FromString,
-                    response_serializer=order__queue__pb2.QueueResponse.SerializeToString,
+                    request_deserializer=utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderQueueRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderQueueResponse.SerializeToString,
             ),
             'Dequeue': grpc.unary_unary_rpc_method_handler(
                     servicer.Dequeue,
-                    request_deserializer=order__queue__pb2.Empty.FromString,
-                    response_serializer=order__queue__pb2.Order.SerializeToString,
+                    request_deserializer=utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderDequeueRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderDequeueResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -62,7 +64,8 @@ def add_OrderQueueServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class OrderQueue(object):
-    """Missing associated documentation comment in .proto file."""
+    """The OrderQueue service definition
+    """
 
     @staticmethod
     def Enqueue(request,
@@ -76,8 +79,8 @@ class OrderQueue(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/order_queue.OrderQueue/Enqueue',
-            order__queue__pb2.Order.SerializeToString,
-            order__queue__pb2.QueueResponse.FromString,
+            utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderQueueRequest.SerializeToString,
+            utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderQueueResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
@@ -93,7 +96,7 @@ class OrderQueue(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/order_queue.OrderQueue/Dequeue',
-            order__queue__pb2.Empty.SerializeToString,
-            order__queue__pb2.Order.FromString,
+            utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderDequeueRequest.SerializeToString,
+            utils_dot_pb_dot_order__queue_dot_order__queue__pb2.OrderDequeueResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

@@ -1,20 +1,35 @@
 syntax = "proto3";
+
 package order_queue;
 
-message Order {
+// Request to enqueue an order
+message OrderQueueRequest {
   string order_id = 1;
-  string order_data = 2;
-  int32 priority = 3;  // New field
+  int32 priority = 2;    // 1 = high priority, 5 = lower, etc.
+  string order_data = 3; // The JSON-serialized data
 }
 
-message QueueResponse {
+// Response to Enqueue
+message OrderQueueResponse {
   bool success = 1;
   string message = 2;
 }
 
-message Empty {}
+// Request to Dequeue
+message OrderDequeueRequest {
+  string executor_id = 1; // optional, for logging or concurrency reasons
+}
 
+// Response to Dequeue
+message OrderDequeueResponse {
+  bool success = 1;
+  string order_id = 2;    // The next order to process
+  string order_data = 3;  // The JSON data for the order
+  string message = 4;     // E.g., "Queue empty" or "Dequeued OK"
+}
+
+// The OrderQueue service definition
 service OrderQueue {
-  rpc Enqueue (Order) returns (QueueResponse);
-  rpc Dequeue (Empty) returns (Order);
+  rpc Enqueue (OrderQueueRequest) returns (OrderQueueResponse);
+  rpc Dequeue (OrderDequeueRequest) returns (OrderDequeueResponse);
 }

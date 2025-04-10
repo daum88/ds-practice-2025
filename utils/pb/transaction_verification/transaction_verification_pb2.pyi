@@ -130,3 +130,37 @@ class OrderInitResponse(_message.Message):
     success: bool
     message: str
     def __init__(self, success: bool = ..., message: _Optional[str] = ...) -> None: ...
+
+class OrderEventRequest(_message.Message):
+    __slots__ = ("order_id", "vector_clock")
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    VECTOR_CLOCK_FIELD_NUMBER: _ClassVar[int]
+    order_id: str
+    vector_clock: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, order_id: _Optional[str] = ..., vector_clock: _Optional[_Iterable[int]] = ...) -> None: ...
+
+class OrderEventResponse(_message.Message):
+    __slots__ = ("success", "message", "updated_vc")
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    UPDATED_VC_FIELD_NUMBER: _ClassVar[int]
+    success: bool
+    message: str
+    updated_vc: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, success: bool = ..., message: _Optional[str] = ..., updated_vc: _Optional[_Iterable[int]] = ...) -> None: ...
+
+class ClearOrderRequest(_message.Message):
+    __slots__ = ("order_id", "final_vc")
+    ORDER_ID_FIELD_NUMBER: _ClassVar[int]
+    FINAL_VC_FIELD_NUMBER: _ClassVar[int]
+    order_id: str
+    final_vc: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, order_id: _Optional[str] = ..., final_vc: _Optional[_Iterable[int]] = ...) -> None: ...
+
+class ClearOrderResponse(_message.Message):
+    __slots__ = ("success", "message")
+    SUCCESS_FIELD_NUMBER: _ClassVar[int]
+    MESSAGE_FIELD_NUMBER: _ClassVar[int]
+    success: bool
+    message: str
+    def __init__(self, success: bool = ..., message: _Optional[str] = ...) -> None: ...

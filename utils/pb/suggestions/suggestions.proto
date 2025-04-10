@@ -2,31 +2,71 @@ syntax = "proto3";
 
 package suggestions;
 
-service BookSuggestions {
-    rpc GetSuggestions (BookSuggestionsRequest) returns (BookSuggestionsResponse);
-    rpc InitOrder(OrderInitRequest) returns (OrderInitResponse);
-}
 
 message Book {
-    string title = 1;
-    string author = 2;
+  string title = 1;
+  string author = 2;
 }
 
+
 message BookSuggestionsRequest {
-    string order_id = 1;  // Added field for order id
-    int32 num_books = 2;
+  string order_id = 1;  
+  int32 num_books = 2;
 }
 
 message BookSuggestionsResponse {
-    repeated Book books = 1;
+  repeated Book books = 1;
 }
 
+
 message OrderInitRequest {
-    string order_id = 1;
-    string order_data = 2;
+  string order_id = 1;
+  string order_data = 2;
 }
 
 message OrderInitResponse {
-    bool success = 1;
-    string message = 2;
+  bool success = 1;
+  string message = 2;
+}
+
+
+message GenerateSuggestionsRequest {
+  string order_id = 1;
+  int32 num_books = 2;
+  repeated int32 vector_clock = 3; // incoming VC
+}
+
+message GenerateSuggestionsResponse {
+  bool success = 1;
+  string message = 2;
+  repeated Book books = 3;          // suggested books
+  repeated int32 updated_vc = 4;    // updated VC
+}
+
+
+message ClearOrderRequest {
+  string order_id = 1;
+  repeated int32 final_vc = 2;
+}
+
+message ClearOrderResponse {
+  bool success = 1;
+  string message = 2;
+}
+
+
+// The service definition
+
+service BookSuggestions {
+  // Old single-call approach (optional)
+  rpc GetSuggestions (BookSuggestionsRequest) returns (BookSuggestionsResponse);
+
+  // For new flow
+  rpc InitOrder(OrderInitRequest) returns (OrderInitResponse);
+
+  // Event-based call (f)
+  rpc GenerateSuggestions(GenerateSuggestionsRequest) returns (GenerateSuggestionsResponse);
+
+  // Final cleanup
+  rpc ClearOrder(ClearOrderRequest) returns (ClearOrderResponse);
 }

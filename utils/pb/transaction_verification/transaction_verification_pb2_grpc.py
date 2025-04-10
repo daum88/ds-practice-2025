@@ -6,7 +6,8 @@ import transaction_verification_pb2 as utils_dot_pb_dot_transaction__verificatio
 
 
 class TransactionVerificationStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """The service definition
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -24,19 +25,68 @@ class TransactionVerificationStub(object):
                 request_serializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderInitRequest.SerializeToString,
                 response_deserializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderInitResponse.FromString,
                 )
+        self.VerifyItems = channel.unary_unary(
+                '/transaction_verification.TransactionVerification/VerifyItems',
+                request_serializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventResponse.FromString,
+                )
+        self.VerifyUserData = channel.unary_unary(
+                '/transaction_verification.TransactionVerification/VerifyUserData',
+                request_serializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventResponse.FromString,
+                )
+        self.VerifyCreditCard = channel.unary_unary(
+                '/transaction_verification.TransactionVerification/VerifyCreditCard',
+                request_serializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventResponse.FromString,
+                )
+        self.ClearOrder = channel.unary_unary(
+                '/transaction_verification.TransactionVerification/ClearOrder',
+                request_serializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.ClearOrderRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.ClearOrderResponse.FromString,
+                )
 
 
 class TransactionVerificationServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """The service definition
+    """
 
     def ValidateTransaction(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Old single-call approach (optional):
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def InitOrder(self, request, context):
+        """Init / store data
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def VerifyItems(self, request, context):
+        """New event-based calls
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def VerifyUserData(self, request, context):
         """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def VerifyCreditCard(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ClearOrder(self, request, context):
+        """Final cleanup
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -54,6 +104,26 @@ def add_TransactionVerificationServicer_to_server(servicer, server):
                     request_deserializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderInitRequest.FromString,
                     response_serializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderInitResponse.SerializeToString,
             ),
+            'VerifyItems': grpc.unary_unary_rpc_method_handler(
+                    servicer.VerifyItems,
+                    request_deserializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventResponse.SerializeToString,
+            ),
+            'VerifyUserData': grpc.unary_unary_rpc_method_handler(
+                    servicer.VerifyUserData,
+                    request_deserializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventResponse.SerializeToString,
+            ),
+            'VerifyCreditCard': grpc.unary_unary_rpc_method_handler(
+                    servicer.VerifyCreditCard,
+                    request_deserializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventResponse.SerializeToString,
+            ),
+            'ClearOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClearOrder,
+                    request_deserializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.ClearOrderRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.ClearOrderResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'transaction_verification.TransactionVerification', rpc_method_handlers)
@@ -62,7 +132,8 @@ def add_TransactionVerificationServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class TransactionVerification(object):
-    """Missing associated documentation comment in .proto file."""
+    """The service definition
+    """
 
     @staticmethod
     def ValidateTransaction(request,
@@ -95,5 +166,73 @@ class TransactionVerification(object):
         return grpc.experimental.unary_unary(request, target, '/transaction_verification.TransactionVerification/InitOrder',
             utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderInitRequest.SerializeToString,
             utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderInitResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def VerifyItems(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/transaction_verification.TransactionVerification/VerifyItems',
+            utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventRequest.SerializeToString,
+            utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def VerifyUserData(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/transaction_verification.TransactionVerification/VerifyUserData',
+            utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventRequest.SerializeToString,
+            utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def VerifyCreditCard(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/transaction_verification.TransactionVerification/VerifyCreditCard',
+            utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventRequest.SerializeToString,
+            utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.OrderEventResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ClearOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/transaction_verification.TransactionVerification/ClearOrder',
+            utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.ClearOrderRequest.SerializeToString,
+            utils_dot_pb_dot_transaction__verification_dot_transaction__verification__pb2.ClearOrderResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

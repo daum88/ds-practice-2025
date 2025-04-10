@@ -6,7 +6,9 @@ import suggestions_pb2 as utils_dot_pb_dot_suggestions_dot_suggestions__pb2
 
 
 class BookSuggestionsStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """The service definition
+
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -24,19 +26,47 @@ class BookSuggestionsStub(object):
                 request_serializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitRequest.SerializeToString,
                 response_deserializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitResponse.FromString,
                 )
+        self.GenerateSuggestions = channel.unary_unary(
+                '/suggestions.BookSuggestions/GenerateSuggestions',
+                request_serializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.GenerateSuggestionsRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.GenerateSuggestionsResponse.FromString,
+                )
+        self.ClearOrder = channel.unary_unary(
+                '/suggestions.BookSuggestions/ClearOrder',
+                request_serializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.ClearOrderRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.ClearOrderResponse.FromString,
+                )
 
 
 class BookSuggestionsServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """The service definition
+
+    """
 
     def GetSuggestions(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Old single-call approach (optional)
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def InitOrder(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """For new flow
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GenerateSuggestions(self, request, context):
+        """Event-based call (f)
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ClearOrder(self, request, context):
+        """Final cleanup
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -54,6 +84,16 @@ def add_BookSuggestionsServicer_to_server(servicer, server):
                     request_deserializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitRequest.FromString,
                     response_serializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitResponse.SerializeToString,
             ),
+            'GenerateSuggestions': grpc.unary_unary_rpc_method_handler(
+                    servicer.GenerateSuggestions,
+                    request_deserializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.GenerateSuggestionsRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.GenerateSuggestionsResponse.SerializeToString,
+            ),
+            'ClearOrder': grpc.unary_unary_rpc_method_handler(
+                    servicer.ClearOrder,
+                    request_deserializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.ClearOrderRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_suggestions_dot_suggestions__pb2.ClearOrderResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'suggestions.BookSuggestions', rpc_method_handlers)
@@ -62,7 +102,9 @@ def add_BookSuggestionsServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class BookSuggestions(object):
-    """Missing associated documentation comment in .proto file."""
+    """The service definition
+
+    """
 
     @staticmethod
     def GetSuggestions(request,
@@ -95,5 +137,39 @@ class BookSuggestions(object):
         return grpc.experimental.unary_unary(request, target, '/suggestions.BookSuggestions/InitOrder',
             utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitRequest.SerializeToString,
             utils_dot_pb_dot_suggestions_dot_suggestions__pb2.OrderInitResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def GenerateSuggestions(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/suggestions.BookSuggestions/GenerateSuggestions',
+            utils_dot_pb_dot_suggestions_dot_suggestions__pb2.GenerateSuggestionsRequest.SerializeToString,
+            utils_dot_pb_dot_suggestions_dot_suggestions__pb2.GenerateSuggestionsResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def ClearOrder(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/suggestions.BookSuggestions/ClearOrder',
+            utils_dot_pb_dot_suggestions_dot_suggestions__pb2.ClearOrderRequest.SerializeToString,
+            utils_dot_pb_dot_suggestions_dot_suggestions__pb2.ClearOrderResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

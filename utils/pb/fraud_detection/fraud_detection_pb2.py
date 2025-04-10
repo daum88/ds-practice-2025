@@ -14,23 +14,31 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n.utils/pb/fraud_detection/fraud_detection.proto\x12\x0f\x66raud_detection\"|\n\x11\x46raudCheckRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x16\n\x0etransaction_id\x18\x02 \x01(\t\x12-\n\x07payment\x18\x03 \x01(\x0b\x32\x1c.fraud_detection.PaymentInfo\x12\x0e\n\x06\x61mount\x18\x04 \x01(\x05\"<\n\x12\x46raudCheckResponse\x12\x15\n\ris_fraudulent\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"O\n\x0bPaymentInfo\x12\x1a\n\x12\x63redit_card_number\x18\x01 \x01(\t\x12\x17\n\x0f\x65xpiration_date\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t\"8\n\x10OrderInitRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x12\n\norder_data\x18\x02 \x01(\t\"5\n\x11OrderInitResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2\xbb\x01\n\x0e\x46raudDetection\x12U\n\nCheckFraud\x12\".fraud_detection.FraudCheckRequest\x1a#.fraud_detection.FraudCheckResponse\x12R\n\tInitOrder\x12!.fraud_detection.OrderInitRequest\x1a\".fraud_detection.OrderInitResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n.utils/pb/fraud_detection/fraud_detection.proto\x12\x0f\x66raud_detection\"O\n\x0bPaymentInfo\x12\x1a\n\x12\x63redit_card_number\x18\x01 \x01(\t\x12\x17\n\x0f\x65xpiration_date\x18\x02 \x01(\t\x12\x0b\n\x03\x63vv\x18\x03 \x01(\t\"|\n\x11\x46raudCheckRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x16\n\x0etransaction_id\x18\x02 \x01(\t\x12-\n\x07payment\x18\x03 \x01(\x0b\x32\x1c.fraud_detection.PaymentInfo\x12\x0e\n\x06\x61mount\x18\x04 \x01(\x05\"<\n\x12\x46raudCheckResponse\x12\x15\n\ris_fraudulent\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"8\n\x10OrderInitRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x12\n\norder_data\x18\x02 \x01(\t\"5\n\x11OrderInitResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\";\n\x11OrderEventRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x14\n\x0cvector_clock\x18\x02 \x03(\x05\"J\n\x12OrderEventResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12\x12\n\nupdated_vc\x18\x03 \x03(\x05\"7\n\x11\x43learOrderRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x10\n\x08\x66inal_vc\x18\x02 \x03(\x05\"6\n\x12\x43learOrderResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2\xc8\x03\n\x0e\x46raudDetection\x12U\n\nCheckFraud\x12\".fraud_detection.FraudCheckRequest\x1a#.fraud_detection.FraudCheckResponse\x12R\n\tInitOrder\x12!.fraud_detection.OrderInitRequest\x1a\".fraud_detection.OrderInitResponse\x12X\n\rCheckUserData\x12\".fraud_detection.OrderEventRequest\x1a#.fraud_detection.OrderEventResponse\x12Z\n\x0f\x43heckCreditCard\x12\".fraud_detection.OrderEventRequest\x1a#.fraud_detection.OrderEventResponse\x12U\n\nClearOrder\x12\".fraud_detection.ClearOrderRequest\x1a#.fraud_detection.ClearOrderResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'utils.pb.fraud_detection.fraud_detection_pb2', _globals)
 if _descriptor._USE_C_DESCRIPTORS == False:
   DESCRIPTOR._options = None
-  _globals['_FRAUDCHECKREQUEST']._serialized_start=67
-  _globals['_FRAUDCHECKREQUEST']._serialized_end=191
-  _globals['_FRAUDCHECKRESPONSE']._serialized_start=193
-  _globals['_FRAUDCHECKRESPONSE']._serialized_end=253
-  _globals['_PAYMENTINFO']._serialized_start=255
-  _globals['_PAYMENTINFO']._serialized_end=334
+  _globals['_PAYMENTINFO']._serialized_start=67
+  _globals['_PAYMENTINFO']._serialized_end=146
+  _globals['_FRAUDCHECKREQUEST']._serialized_start=148
+  _globals['_FRAUDCHECKREQUEST']._serialized_end=272
+  _globals['_FRAUDCHECKRESPONSE']._serialized_start=274
+  _globals['_FRAUDCHECKRESPONSE']._serialized_end=334
   _globals['_ORDERINITREQUEST']._serialized_start=336
   _globals['_ORDERINITREQUEST']._serialized_end=392
   _globals['_ORDERINITRESPONSE']._serialized_start=394
   _globals['_ORDERINITRESPONSE']._serialized_end=447
-  _globals['_FRAUDDETECTION']._serialized_start=450
-  _globals['_FRAUDDETECTION']._serialized_end=637
+  _globals['_ORDEREVENTREQUEST']._serialized_start=449
+  _globals['_ORDEREVENTREQUEST']._serialized_end=508
+  _globals['_ORDEREVENTRESPONSE']._serialized_start=510
+  _globals['_ORDEREVENTRESPONSE']._serialized_end=584
+  _globals['_CLEARORDERREQUEST']._serialized_start=586
+  _globals['_CLEARORDERREQUEST']._serialized_end=641
+  _globals['_CLEARORDERRESPONSE']._serialized_start=643
+  _globals['_CLEARORDERRESPONSE']._serialized_end=697
+  _globals['_FRAUDDETECTION']._serialized_start=700
+  _globals['_FRAUDDETECTION']._serialized_end=1156
 # @@protoc_insertion_point(module_scope)

@@ -1,16 +1,15 @@
-# order_executor/Dockerfile
+# Use an official Python runtime as the base image
+FROM python:3.11
 
-FROM python:3.11-slim
+# Set the working directory in the container
+# Both the utils and src folders will be mounted as volumes, please see docker-compose.yaml
 WORKDIR /app
 
-# Install required dependencies
-RUN pip install grpcio grpcio-tools protobuf
+# Copy the requirements file to the working directory
+COPY ./order_executor/requirements.txt .
 
-# Copy application source code
-COPY src/ /app/
+# Install the Python dependencies
+RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy gRPC generated protobuf files into container (from local pb_generated folder)
-COPY pb_generated/*.py /app/
-
-# Set the entrypoint command
-CMD ["python", "executor_service.py"]
+# Set the command to run the application
+CMD python utils/other/hotreload.py "order_executor/src/app.py"

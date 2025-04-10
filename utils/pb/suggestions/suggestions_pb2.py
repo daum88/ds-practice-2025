@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n&utils/pb/suggestions/suggestions.proto\x12\x0bsuggestions\"%\n\x04\x42ook\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x02 \x01(\t\"=\n\x16\x42ookSuggestionsRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x11\n\tnum_books\x18\x02 \x01(\x05\";\n\x17\x42ookSuggestionsResponse\x12 \n\x05\x62ooks\x18\x01 \x03(\x0b\x32\x11.suggestions.Book\"8\n\x10OrderInitRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x12\n\norder_data\x18\x02 \x01(\t\"5\n\x11OrderInitResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2\xba\x01\n\x0f\x42ookSuggestions\x12[\n\x0eGetSuggestions\x12#.suggestions.BookSuggestionsRequest\x1a$.suggestions.BookSuggestionsResponse\x12J\n\tInitOrder\x12\x1d.suggestions.OrderInitRequest\x1a\x1e.suggestions.OrderInitResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n&utils/pb/suggestions/suggestions.proto\x12\x0bsuggestions\"%\n\x04\x42ook\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0e\n\x06\x61uthor\x18\x02 \x01(\t\"=\n\x16\x42ookSuggestionsRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x11\n\tnum_books\x18\x02 \x01(\x05\";\n\x17\x42ookSuggestionsResponse\x12 \n\x05\x62ooks\x18\x01 \x03(\x0b\x32\x11.suggestions.Book\"8\n\x10OrderInitRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x12\n\norder_data\x18\x02 \x01(\t\"5\n\x11OrderInitResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\"W\n\x1aGenerateSuggestionsRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x11\n\tnum_books\x18\x02 \x01(\x05\x12\x14\n\x0cvector_clock\x18\x03 \x03(\x05\"u\n\x1bGenerateSuggestionsResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t\x12 \n\x05\x62ooks\x18\x03 \x03(\x0b\x32\x11.suggestions.Book\x12\x12\n\nupdated_vc\x18\x04 \x03(\x05\"7\n\x11\x43learOrderRequest\x12\x10\n\x08order_id\x18\x01 \x01(\t\x12\x10\n\x08\x66inal_vc\x18\x02 \x03(\x05\"6\n\x12\x43learOrderResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07message\x18\x02 \x01(\t2\xf3\x02\n\x0f\x42ookSuggestions\x12[\n\x0eGetSuggestions\x12#.suggestions.BookSuggestionsRequest\x1a$.suggestions.BookSuggestionsResponse\x12J\n\tInitOrder\x12\x1d.suggestions.OrderInitRequest\x1a\x1e.suggestions.OrderInitResponse\x12h\n\x13GenerateSuggestions\x12\'.suggestions.GenerateSuggestionsRequest\x1a(.suggestions.GenerateSuggestionsResponse\x12M\n\nClearOrder\x12\x1e.suggestions.ClearOrderRequest\x1a\x1f.suggestions.ClearOrderResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -31,6 +31,14 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_ORDERINITREQUEST']._serialized_end=274
   _globals['_ORDERINITRESPONSE']._serialized_start=276
   _globals['_ORDERINITRESPONSE']._serialized_end=329
-  _globals['_BOOKSUGGESTIONS']._serialized_start=332
-  _globals['_BOOKSUGGESTIONS']._serialized_end=518
+  _globals['_GENERATESUGGESTIONSREQUEST']._serialized_start=331
+  _globals['_GENERATESUGGESTIONSREQUEST']._serialized_end=418
+  _globals['_GENERATESUGGESTIONSRESPONSE']._serialized_start=420
+  _globals['_GENERATESUGGESTIONSRESPONSE']._serialized_end=537
+  _globals['_CLEARORDERREQUEST']._serialized_start=539
+  _globals['_CLEARORDERREQUEST']._serialized_end=594
+  _globals['_CLEARORDERRESPONSE']._serialized_start=596
+  _globals['_CLEARORDERRESPONSE']._serialized_end=650
+  _globals['_BOOKSUGGESTIONS']._serialized_start=653
+  _globals['_BOOKSUGGESTIONS']._serialized_end=1024
 # @@protoc_insertion_point(module_scope)
