@@ -2,11 +2,13 @@
 """Client and server classes corresponding to protobuf-defined services."""
 import grpc
 
-import order_executor_pb2 as order__executor__pb2
+from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
+import order_executor_pb2 as utils_dot_pb_dot_order__executor_dot_order__executor__pb2
 
 
 class OrderExecutorStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """The gRPC service definition.
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -14,18 +16,54 @@ class OrderExecutorStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.Election = channel.unary_unary(
+                '/order_executor.OrderExecutor/Election',
+                request_serializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.ElectionRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.ElectionResponse.FromString,
+                )
+        self.Coordinator = channel.unary_unary(
+                '/order_executor.OrderExecutor/Coordinator',
+                request_serializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.CoordinatorRequest.SerializeToString,
+                response_deserializer=google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+                )
+        self.Heartbeat = channel.unary_unary(
+                '/order_executor.OrderExecutor/Heartbeat',
+                request_serializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HeartbeatRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HeartbeatResponse.FromString,
+                )
         self.HealthCheck = channel.unary_unary(
                 '/order_executor.OrderExecutor/HealthCheck',
-                request_serializer=order__executor__pb2.HealthRequest.SerializeToString,
-                response_deserializer=order__executor__pb2.HealthResponse.FromString,
+                request_serializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HealthRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HealthResponse.FromString,
                 )
 
 
 class OrderExecutorServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """The gRPC service definition.
+    """
+
+    def Election(self, request, context):
+        """Bully algorithm RPCs
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Coordinator(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def Heartbeat(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
     def HealthCheck(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """Example health check
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -33,10 +71,25 @@ class OrderExecutorServicer(object):
 
 def add_OrderExecutorServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'Election': grpc.unary_unary_rpc_method_handler(
+                    servicer.Election,
+                    request_deserializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.ElectionRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.ElectionResponse.SerializeToString,
+            ),
+            'Coordinator': grpc.unary_unary_rpc_method_handler(
+                    servicer.Coordinator,
+                    request_deserializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.CoordinatorRequest.FromString,
+                    response_serializer=google_dot_protobuf_dot_empty__pb2.Empty.SerializeToString,
+            ),
+            'Heartbeat': grpc.unary_unary_rpc_method_handler(
+                    servicer.Heartbeat,
+                    request_deserializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HeartbeatRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HeartbeatResponse.SerializeToString,
+            ),
             'HealthCheck': grpc.unary_unary_rpc_method_handler(
                     servicer.HealthCheck,
-                    request_deserializer=order__executor__pb2.HealthRequest.FromString,
-                    response_serializer=order__executor__pb2.HealthResponse.SerializeToString,
+                    request_deserializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HealthRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HealthResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -46,7 +99,59 @@ def add_OrderExecutorServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class OrderExecutor(object):
-    """Missing associated documentation comment in .proto file."""
+    """The gRPC service definition.
+    """
+
+    @staticmethod
+    def Election(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/order_executor.OrderExecutor/Election',
+            utils_dot_pb_dot_order__executor_dot_order__executor__pb2.ElectionRequest.SerializeToString,
+            utils_dot_pb_dot_order__executor_dot_order__executor__pb2.ElectionResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Coordinator(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/order_executor.OrderExecutor/Coordinator',
+            utils_dot_pb_dot_order__executor_dot_order__executor__pb2.CoordinatorRequest.SerializeToString,
+            google_dot_protobuf_dot_empty__pb2.Empty.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def Heartbeat(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/order_executor.OrderExecutor/Heartbeat',
+            utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HeartbeatRequest.SerializeToString,
+            utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HeartbeatResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
 
     @staticmethod
     def HealthCheck(request,
@@ -60,7 +165,7 @@ class OrderExecutor(object):
             timeout=None,
             metadata=None):
         return grpc.experimental.unary_unary(request, target, '/order_executor.OrderExecutor/HealthCheck',
-            order__executor__pb2.HealthRequest.SerializeToString,
-            order__executor__pb2.HealthResponse.FromString,
+            utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HealthRequest.SerializeToString,
+            utils_dot_pb_dot_order__executor_dot_order__executor__pb2.HealthResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

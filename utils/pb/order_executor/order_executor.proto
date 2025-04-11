@@ -1,12 +1,42 @@
 syntax = "proto3";
-package order_executor;
 
+package order_executor;
+import "google/protobuf/empty.proto";
+
+// ----- Messages for Bully algorithm -----
+message ElectionRequest {
+  int32 candidate_id = 1;
+}
+
+message ElectionResponse {
+  bool ok = 1;
+}
+
+message CoordinatorRequest {
+  int32 coordinator_id = 1;
+}
+
+message HeartbeatRequest {}
+
+message HeartbeatResponse {
+  bool alive = 1;
+  string leader_status = 2;
+}
+
+// ----- HealthCheck messages -----
 message HealthRequest {}
 
 message HealthResponse {
   string status = 1;
 }
 
+// The gRPC service definition.
 service OrderExecutor {
+  // Bully algorithm RPCs
+  rpc Election(ElectionRequest) returns (ElectionResponse);
+  rpc Coordinator(CoordinatorRequest) returns (.google.protobuf.Empty);
+  rpc Heartbeat(HeartbeatRequest) returns (HeartbeatResponse);
+
+  // Example health check
   rpc HealthCheck(HealthRequest) returns (HealthResponse);
 }

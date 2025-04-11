@@ -23,6 +23,10 @@ class CoordinatorRequest(_message.Message):
     coordinator_id: int
     def __init__(self, coordinator_id: _Optional[int] = ...) -> None: ...
 
+class HeartbeatRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
 class HeartbeatResponse(_message.Message):
     __slots__ = ("alive", "leader_status")
     ALIVE_FIELD_NUMBER: _ClassVar[int]
@@ -30,3 +34,13 @@ class HeartbeatResponse(_message.Message):
     alive: bool
     leader_status: str
     def __init__(self, alive: bool = ..., leader_status: _Optional[str] = ...) -> None: ...
+
+class HealthRequest(_message.Message):
+    __slots__ = ()
+    def __init__(self) -> None: ...
+
+class HealthResponse(_message.Message):
+    __slots__ = ("status",)
+    STATUS_FIELD_NUMBER: _ClassVar[int]
+    status: str
+    def __init__(self, status: _Optional[str] = ...) -> None: ...
