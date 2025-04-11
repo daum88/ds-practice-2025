@@ -90,30 +90,54 @@ services:
 
 
   order_executor1:
+      # The name of this service is "order_executor1"
+      build:
+        context: ./
+        dockerfile: ./order_executor/Dockerfile
+      # Our code references "order_executor{pid}:50056" – so for ID=1 => "order_executor1:50056"
+      # We pass arguments to 'app.py':
+      command: ["python", "/app/order_executor/src/app.py", "--instance_id", "1", "--executor_ids", "1,2,3"]
+      environment:
+        - PYTHONUNBUFFERED=TRUE
+        - ORDER_QUEUE_ADDR=order_queue:50054
+      # We only need 'expose' for internal communication;
+      # or we can do ports: ["50056:50056"] if we want access from host.
+      expose:
+        - "50056"
+      volumes:
+        - ./utils:/app/utils
+        - ./order_executor/src:/app/order_executor/src
+      depends_on:
+        - order_queue
+
+  order_executor2:
     build:
       context: ./
       dockerfile: ./order_executor/Dockerfile
-    command: ["python", "/app/order_executor/src/app.py", "--instance_id", "executor1", "--executor_ids", "executor1,executor2"]
+    command: ["python", "/app/order_executor/src/app.py", "--instance_id", "2", "--executor_ids", "1,2,3"]
     environment:
       - PYTHONUNBUFFERED=TRUE
       - ORDER_QUEUE_ADDR=order_queue:50054
+    expose:
+      - "50056"
     volumes:
       - ./utils:/app/utils
       - ./order_executor/src:/app/order_executor/src
     depends_on:
       - order_queue
 
-  order_executor2:
+  order_executor3:
     build:
       context: ./
       dockerfile: ./order_executor/Dockerfile
-    command: ["python", "/app/order_executor/src/app.py", "--instance_id", "executor2", "--executor_ids", "executor1,executor2"]
+    command: ["python", "/app/order_executor/src/app.py", "--instance_id", "3", "--executor_ids", "1,2,3"]
     environment:
       - PYTHONUNBUFFERED=TRUE
       - ORDER_QUEUE_ADDR=order_queue:50054
+    expose:
+      - "50056"
     volumes:
       - ./utils:/app/utils
       - ./order_executor/src:/app/order_executor/src
     depends_on:
       - order_queue
-  
