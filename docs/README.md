@@ -69,7 +69,7 @@
 ![VectorClocks-diagram](https://github.com/daum88/ds-practice-2025/blob/95c89419efd8afdec8658acd0fa1f5f1f0b2ea77/docs/vector_clocks_diagram.jpg)
 
 ### Leader election diagram
-![Leader_election-diagram](https://github.com/daum88/ds-practice-2025/blob/95c89419efd8afdec8658acd0fa1f5f1f0b2ea77/docs/leader_election_diagram.png)
+![Leader_election-diagram](https://github.com/daum88/ds-practice-2025/blob/4132a05ba8e9ceeefe893c7929f20bf7d6357778/docs/leader_election_bully_diagram.png)
 
 ### System model:
 
