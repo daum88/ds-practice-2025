@@ -71,6 +71,48 @@
 ### Leader election diagram
 ![Leader_election-diagram](https://github.com/daum88/ds-practice-2025/blob/95c89419efd8afdec8658acd0fa1f5f1f0b2ea77/docs/leader_election_diagram.png)
 
+### System model:
+
+Our system follows a distributed microservice architecture. Each service runs in its own Docker container and communicates with others over gRPC. The setup is managed using Docker Compose, making it easy to run and scale different components.
+
+**Architecture & Services:**
+The system is made up of the following key services:
+
+**Orchestrator:**
+This is the main coordinator. It receives incoming orders (via an HTTP API), calls other services to verify and enrich the order, and finally adds it to a queue. It's the only component that talks to every other service directly.
+
+**Fraud Detection:**
+Checks if an order looks suspicious. Stateless and responds quickly to fraud-check requests.
+
+**Transaction Verification:**
+Confirms whether an order is valid (e.g., payment amount, rules, etc.).
+
+**Suggestions:**
+Generates recommendations to go along with an order (like upselling). Uses OpenAI behind the scenes.
+
+**Order Queue:**
+A priority queue that holds orders waiting to be executed. Other services push to it, and the executor pulls from it.
+
+**Order Executor:**
+This service dequeues and processes orders. There can be multiple executor instances running — they use a leader election algorithm to make sure only one of them is actively processing orders at a time.
+
+**Connections Between Services:**
+All the backend services (fraud, verification, suggestions, queue) expose gRPC APIs. The orchestrator is a gRPC client to each of them. The executor talks to the order queue using gRPC as well.
+Each service is connected through Docker’s internal network, and service names in the compose file are used for discovery.
+
+**Leader Election:**
+The executor service supports multiple instances. These use a built-in election mechanism (based on instance IDs) to choose one active leader. Only the leader dequeues and processes orders. If the leader goes down, the others detect it and trigger a new election.
+
+**Failure Scenarios:**
+If the executor leader crashes, the others detect the failure and elect a new leader.
+If the orchestrator goes down, new orders can’t be submitted, but the rest of the system keeps running.
+If one of the worker services (fraud, verification, etc.) fails, the orchestrator handles it (e.g., skips suggestions or marks the order as failed).
+If the order queue goes down, nothing can be enqueued or dequeued until it's back.
+
+**Assumptions:**
+We assume fail-stop behavior (a crashed service just stops, doesn’t act weird).
+Services can recover from restarts.
+The internal Docker network is reliable.
 
 
 
