@@ -69,7 +69,7 @@
 ![VectorClocks-diagram](https://github.com/daum88/ds-practice-2025/blob/95c89419efd8afdec8658acd0fa1f5f1f0b2ea77/docs/vector_clocks_diagram.jpg)
 
 ### Leader election diagram
-![Leader_election-diagram](https://github.com/daum88/ds-practice-2025/blob/95c89419efd8afdec8658acd0fa1f5f1f0b2ea77/docs/leader_election_diagram.png)
+![Leader_election-diagram](https://github.com/daum88/ds-practice-2025/blob/4132a05ba8e9ceeefe893c7929f20bf7d6357778/docs/leader_election_bully_diagram.png)
 
 ### System model:
 
@@ -101,7 +101,7 @@ All the backend services (fraud, verification, suggestions, queue) expose gRPC A
 Each service is connected through Docker’s internal network, and service names in the compose file are used for discovery.
 
 **Leader Election:**
-The executor service supports multiple instances. These use a built-in election mechanism (based on instance IDs) to choose one active leader. Only the leader dequeues and processes orders. If the leader goes down, the others detect it and trigger a new election.
+Leader Election in this system uses the Bully Algorithm, where each order executor instance has a unique numeric ID. On startup or failure detection, executors initiate elections by contacting higher-ID peers. The instance with the highest reachable ID becomes the leader and announces itself. Only the leader dequeues and executes orders. If it fails, remaining executors detect it via heartbeats and trigger a new election to maintain continuous processing.
 
 **Failure Scenarios:**
 If the executor leader crashes, the others detect the failure and elect a new leader.
