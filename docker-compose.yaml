@@ -59,7 +59,7 @@ services:
       - PYTHONUNBUFFERED=TRUE
       - PYTHONFILE=/app/suggestions/src/app.py
       #OpenAI API key
-      - OPENAI_API_KEY=${OPEN_AI_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     volumes:
       - ./utils:/app/utils
       - ./suggestions/src:/app/suggestions/src
@@ -141,3 +141,52 @@ services:
       - ./order_executor/src:/app/order_executor/src
     depends_on:
       - order_queue
+
+
+  books_primary:
+    build:
+      context: ./books_database
+      dockerfile: ./Dockerfile
+    command:
+      - python
+      - "/app/books_database/src/app.py"
+      - primary
+      - books_backup1:50056
+      - books_backup2:50056
+    ports:
+      - "50055:50055"       # primary listens internally on 50055
+    expose:
+      - "50055"
+    volumes:
+      - ./utils:/app/utils
+      - ./books_database/src:/app/books_database/src
+
+  books_backup1:
+    build:
+      context: ./books_database
+      dockerfile: ./Dockerfile
+    command:
+      - python
+      - "/app/books_database/src/app.py"
+      - backup
+      - "50056"
+    expose:
+      - "50056"
+    volumes:
+      - ./utils:/app/utils
+      - ./books_database/src:/app/books_database/src
+
+  books_backup2:
+    build:
+      context: ./books_database
+      dockerfile: ./Dockerfile
+    command:
+      - python
+      - "/app/books_database/src/app.py"
+      - backup
+      - "50056"
+    expose:
+      - "50056"
+    volumes:
+      - ./utils:/app/utils
+      - ./books_database/src:/app/books_database/src
