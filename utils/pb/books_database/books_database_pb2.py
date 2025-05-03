@@ -15,7 +15,7 @@ _sym_db = _symbol_database.Default()
 from google.protobuf import empty_pb2 as google_dot_protobuf_dot_empty__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n,utils/pb/books_database/books_database.proto\x12\x0e\x62ooks_database\x1a\x1bgoogle/protobuf/empty.proto\"\x1c\n\x0bReadRequest\x12\r\n\x05title\x18\x01 \x01(\t\"\x1d\n\x0cReadResponse\x12\r\n\x05stock\x18\x01 \x01(\x05\"0\n\x0cWriteRequest\x12\r\n\x05title\x18\x01 \x01(\t\x12\x11\n\tnew_stock\x18\x02 \x01(\x05\" \n\rWriteResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x32\x98\x01\n\rBooksDatabase\x12\x41\n\x04Read\x12\x1b.books_database.ReadRequest\x1a\x1c.books_database.ReadResponse\x12\x44\n\x05Write\x12\x1c.books_database.WriteRequest\x1a\x1d.books_database.WriteResponseb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n,utils/pb/books_database/books_database.proto\x12\x0e\x62ooks_database\x1a\x1bgoogle/protobuf/empty.proto\"\x1c\n\x0bReadRequest\x12\r\n\x05title\x18\x01 \x01(\t\".\n\x0cReadResponse\x12\r\n\x05stock\x18\x01 \x01(\x05\x12\x0f\n\x07version\x18\x02 \x01(\x05\"0\n\x0cWriteRequest\x12\r\n\x05title\x18\x01 \x01(\t\x12\x11\n\tnew_stock\x18\x02 \x01(\x05\"1\n\rWriteResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\x0f\n\x07version\x18\x02 \x01(\x05\"1\n\x10\x44\x65\x63rementRequest\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x05\"C\n\nCASRequest\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x05\x12\x16\n\x0e\x65xpect_version\x18\x03 \x01(\x05\"D\n\x11\x44\x65\x63rementResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05stock\x18\x02 \x01(\x05\x12\x0f\n\x07version\x18\x03 \x01(\x05\"1\n\x10IncrementRequest\x12\r\n\x05title\x18\x01 \x01(\t\x12\x0e\n\x06\x61mount\x18\x02 \x01(\x05\"D\n\x11IncrementResponse\x12\x0f\n\x07success\x18\x01 \x01(\x08\x12\r\n\x05stock\x18\x02 \x01(\x05\x12\x0f\n\x07version\x18\x03 \x01(\x05\"2\n\x0e\x43ompareRequest\x12\r\n\x05title\x18\x01 \x01(\t\x12\x11\n\tthreshold\x18\x02 \x01(\x05\"0\n\x0f\x43ompareResponse\x12\x0e\n\x06\x65nough\x18\x01 \x01(\x08\x12\r\n\x05stock\x18\x02 \x01(\x05\x32\xe6\x03\n\rBooksDatabase\x12\x41\n\x04Read\x12\x1b.books_database.ReadRequest\x1a\x1c.books_database.ReadResponse\x12\x44\n\x05Write\x12\x1c.books_database.WriteRequest\x1a\x1d.books_database.WriteResponse\x12U\n\x0e\x44\x65\x63rementStock\x12 .books_database.DecrementRequest\x1a!.books_database.DecrementResponse\x12M\n\x0c\x43\x41SDecrement\x12\x1a.books_database.CASRequest\x1a!.books_database.DecrementResponse\x12U\n\x0eIncrementStock\x12 .books_database.IncrementRequest\x1a!.books_database.IncrementResponse\x12O\n\x0c\x43ompareStock\x12\x1e.books_database.CompareRequest\x1a\x1f.books_database.CompareResponseb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -25,11 +25,25 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _globals['_READREQUEST']._serialized_start=93
   _globals['_READREQUEST']._serialized_end=121
   _globals['_READRESPONSE']._serialized_start=123
-  _globals['_READRESPONSE']._serialized_end=152
-  _globals['_WRITEREQUEST']._serialized_start=154
-  _globals['_WRITEREQUEST']._serialized_end=202
-  _globals['_WRITERESPONSE']._serialized_start=204
-  _globals['_WRITERESPONSE']._serialized_end=236
-  _globals['_BOOKSDATABASE']._serialized_start=239
-  _globals['_BOOKSDATABASE']._serialized_end=391
+  _globals['_READRESPONSE']._serialized_end=169
+  _globals['_WRITEREQUEST']._serialized_start=171
+  _globals['_WRITEREQUEST']._serialized_end=219
+  _globals['_WRITERESPONSE']._serialized_start=221
+  _globals['_WRITERESPONSE']._serialized_end=270
+  _globals['_DECREMENTREQUEST']._serialized_start=272
+  _globals['_DECREMENTREQUEST']._serialized_end=321
+  _globals['_CASREQUEST']._serialized_start=323
+  _globals['_CASREQUEST']._serialized_end=390
+  _globals['_DECREMENTRESPONSE']._serialized_start=392
+  _globals['_DECREMENTRESPONSE']._serialized_end=460
+  _globals['_INCREMENTREQUEST']._serialized_start=462
+  _globals['_INCREMENTREQUEST']._serialized_end=511
+  _globals['_INCREMENTRESPONSE']._serialized_start=513
+  _globals['_INCREMENTRESPONSE']._serialized_end=581
+  _globals['_COMPAREREQUEST']._serialized_start=583
+  _globals['_COMPAREREQUEST']._serialized_end=633
+  _globals['_COMPARERESPONSE']._serialized_start=635
+  _globals['_COMPARERESPONSE']._serialized_end=683
+  _globals['_BOOKSDATABASE']._serialized_start=686
+  _globals['_BOOKSDATABASE']._serialized_end=1172
 # @@protoc_insertion_point(module_scope)

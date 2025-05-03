@@ -1,22 +1,23 @@
 syntax = "proto3";
-
 package books_database;
 
 import "google/protobuf/empty.proto";
 
-// Client-facing API
 service BooksDatabase {
-  // Read the current stock for a title
-  rpc Read(ReadRequest)  returns (ReadResponse);
-  // Overwrite stock for a title
-  rpc Write(WriteRequest) returns (WriteResponse);
+  rpc Read            (ReadRequest)          returns (ReadResponse);
+  rpc Write           (WriteRequest)         returns (WriteResponse);
+  rpc DecrementStock  (DecrementRequest)     returns (DecrementResponse);
+  rpc CASDecrement    (CASRequest)           returns (DecrementResponse);
+  rpc IncrementStock  (IncrementRequest)     returns (IncrementResponse);
+  rpc CompareStock    (CompareRequest)       returns (CompareResponse);
 }
 
 message ReadRequest {
   string title = 1;
 }
 message ReadResponse {
-  int32 stock = 1;
+  int32 stock   = 1;
+  int32 version = 2;
 }
 
 message WriteRequest {
@@ -25,4 +26,39 @@ message WriteRequest {
 }
 message WriteResponse {
   bool success = 1;
+  int32 version = 2;
+}
+
+message DecrementRequest {
+  string title   = 1;
+  int32  amount  = 2;
+}
+message CASRequest {
+  string title          = 1;
+  int32  amount         = 2;
+  int32  expect_version = 3;
+}
+message DecrementResponse {
+  bool   success = 1;
+  int32  stock   = 2;
+  int32  version = 3;
+}
+
+message IncrementRequest {
+  string title  = 1;
+  int32  amount = 2;
+}
+message IncrementResponse {
+  bool   success = 1;
+  int32  stock   = 2;
+  int32  version = 3;
+}
+
+message CompareRequest {
+  string title     = 1;
+  int32  threshold = 2;
+}
+message CompareResponse {
+  bool   enough = 1;
+  int32  stock  = 2;
 }

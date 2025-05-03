@@ -6,8 +6,7 @@ import books_database_pb2 as utils_dot_pb_dot_books__database_dot_books__databas
 
 
 class BooksDatabaseStub(object):
-    """Client-facing API
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def __init__(self, channel):
         """Constructor.
@@ -25,22 +24,63 @@ class BooksDatabaseStub(object):
                 request_serializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.WriteRequest.SerializeToString,
                 response_deserializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.WriteResponse.FromString,
                 )
+        self.DecrementStock = channel.unary_unary(
+                '/books_database.BooksDatabase/DecrementStock',
+                request_serializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.DecrementRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.DecrementResponse.FromString,
+                )
+        self.CASDecrement = channel.unary_unary(
+                '/books_database.BooksDatabase/CASDecrement',
+                request_serializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.CASRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.DecrementResponse.FromString,
+                )
+        self.IncrementStock = channel.unary_unary(
+                '/books_database.BooksDatabase/IncrementStock',
+                request_serializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.IncrementRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.IncrementResponse.FromString,
+                )
+        self.CompareStock = channel.unary_unary(
+                '/books_database.BooksDatabase/CompareStock',
+                request_serializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.CompareRequest.SerializeToString,
+                response_deserializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.CompareResponse.FromString,
+                )
 
 
 class BooksDatabaseServicer(object):
-    """Client-facing API
-    """
+    """Missing associated documentation comment in .proto file."""
 
     def Read(self, request, context):
-        """Read the current stock for a title
-        """
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
     def Write(self, request, context):
-        """Overwrite stock for a title
-        """
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def DecrementStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CASDecrement(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def IncrementStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def CompareStock(self, request, context):
+        """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -58,6 +98,26 @@ def add_BooksDatabaseServicer_to_server(servicer, server):
                     request_deserializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.WriteRequest.FromString,
                     response_serializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.WriteResponse.SerializeToString,
             ),
+            'DecrementStock': grpc.unary_unary_rpc_method_handler(
+                    servicer.DecrementStock,
+                    request_deserializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.DecrementRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.DecrementResponse.SerializeToString,
+            ),
+            'CASDecrement': grpc.unary_unary_rpc_method_handler(
+                    servicer.CASDecrement,
+                    request_deserializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.CASRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.DecrementResponse.SerializeToString,
+            ),
+            'IncrementStock': grpc.unary_unary_rpc_method_handler(
+                    servicer.IncrementStock,
+                    request_deserializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.IncrementRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.IncrementResponse.SerializeToString,
+            ),
+            'CompareStock': grpc.unary_unary_rpc_method_handler(
+                    servicer.CompareStock,
+                    request_deserializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.CompareRequest.FromString,
+                    response_serializer=utils_dot_pb_dot_books__database_dot_books__database__pb2.CompareResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'books_database.BooksDatabase', rpc_method_handlers)
@@ -66,8 +126,7 @@ def add_BooksDatabaseServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class BooksDatabase(object):
-    """Client-facing API
-    """
+    """Missing associated documentation comment in .proto file."""
 
     @staticmethod
     def Read(request,
@@ -100,5 +159,73 @@ class BooksDatabase(object):
         return grpc.experimental.unary_unary(request, target, '/books_database.BooksDatabase/Write',
             utils_dot_pb_dot_books__database_dot_books__database__pb2.WriteRequest.SerializeToString,
             utils_dot_pb_dot_books__database_dot_books__database__pb2.WriteResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def DecrementStock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/books_database.BooksDatabase/DecrementStock',
+            utils_dot_pb_dot_books__database_dot_books__database__pb2.DecrementRequest.SerializeToString,
+            utils_dot_pb_dot_books__database_dot_books__database__pb2.DecrementResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CASDecrement(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/books_database.BooksDatabase/CASDecrement',
+            utils_dot_pb_dot_books__database_dot_books__database__pb2.CASRequest.SerializeToString,
+            utils_dot_pb_dot_books__database_dot_books__database__pb2.DecrementResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def IncrementStock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/books_database.BooksDatabase/IncrementStock',
+            utils_dot_pb_dot_books__database_dot_books__database__pb2.IncrementRequest.SerializeToString,
+            utils_dot_pb_dot_books__database_dot_books__database__pb2.IncrementResponse.FromString,
+            options, channel_credentials,
+            insecure, call_credentials, compression, wait_for_ready, timeout, metadata)
+
+    @staticmethod
+    def CompareStock(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(request, target, '/books_database.BooksDatabase/CompareStock',
+            utils_dot_pb_dot_books__database_dot_books__database__pb2.CompareRequest.SerializeToString,
+            utils_dot_pb_dot_books__database_dot_books__database__pb2.CompareResponse.FromString,
             options, channel_credentials,
             insecure, call_credentials, compression, wait_for_ready, timeout, metadata)

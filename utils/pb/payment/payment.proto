@@ -1,0 +1,26 @@
+syntax = "proto3";
+package payment;
+
+import "google/protobuf/empty.proto";
+
+
+message PreparePaymentRequest {
+  string id = 1;
+  string user_name = 2;
+  string user_contact = 3;
+  int32 amount = 4;
+}
+
+message PreparePaymentResponse {
+  bool ready = 1;
+}
+
+message FinalizePaymentRequest {
+  string id = 1;
+  bool abort = 2;
+}
+
+service PaymentService {
+  rpc PreparePayment(PreparePaymentRequest) returns (PreparePaymentResponse);
+  rpc FinalizePayment(FinalizePaymentRequest) returns (google.protobuf.Empty);
+}
