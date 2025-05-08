@@ -128,10 +128,10 @@ The internal Docker network is reliable.
 ## Checkpoint 3:
 
 ### Consistency protocol diagram
-![VectorClocks-diagram](https://github.com/daum88/ds-practice-2025/blob/95c89419efd8afdec8658acd0fa1f5f1f0b2ea77/docs/vector_clocks_diagram.jpg)
+![Consistency_Protocol-diagram](https://github.com/daum88/ds-practice-2025/blob/venkat/docs/consistency_protocol_diagram.png)
 
 ### Two-phase commit protocol diagram
-![Leader_election-diagram](https://github.com/daum88/ds-practice-2025/blob/4132a05ba8e9ceeefe893c7929f20bf7d6357778/docs/leader_election_bully_diagram.png)
+![Two-Phase_commit_protocol-diagram](https://github.com/daum88/ds-practice-2025/blob/venkat/docs/2Phase_commit_protocol_diagram.png)
 
 
 
