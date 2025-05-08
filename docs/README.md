@@ -9,7 +9,12 @@
 │   ├── System-diagram.jpg
 │   ├── Vector_clocks_diagram.jpg
 │   └── Leader_election_diagram.jpg
-│ 
+│
+├── books_database/                 # books database microservice
+│   ├── src/
+│       ├── app.py
+│   ├── Dockerfile
+│
 ├── frontend/                 # Frontend microservice
 │   ├── src/
 │       ├── index.html
@@ -32,6 +37,11 @@
 │       ├── app.py
 │   ├── Dockerfile
 │   ├── requirements.txt
+│ 
+├── payment/                 # Payment microservice
+│   ├── src/
+│       ├── app.py
+│   ├── Dockerfile
 │ 
 ├── fraud_detection/          # Fraud detection microservice
 │   ├── src/
@@ -113,6 +123,15 @@ If the order queue goes down, nothing can be enqueued or dequeued until it's bac
 We assume fail-stop behavior (a crashed service just stops, doesn’t act weird).
 Services can recover from restarts.
 The internal Docker network is reliable.
+
+
+## Checkpoint 3:
+
+### Consistency protocol diagram
+![VectorClocks-diagram](https://github.com/daum88/ds-practice-2025/blob/95c89419efd8afdec8658acd0fa1f5f1f0b2ea77/docs/vector_clocks_diagram.jpg)
+
+### Two-phase commit protocol diagram
+![Leader_election-diagram](https://github.com/daum88/ds-practice-2025/blob/4132a05ba8e9ceeefe893c7929f20bf7d6357778/docs/leader_election_bully_diagram.png)
 
 
 
