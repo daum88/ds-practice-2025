@@ -134,4 +134,19 @@ The internal Docker network is reliable.
 ![Two-Phase_commit_protocol-diagram](https://github.com/daum88/ds-practice-2025/blob/venkat/docs/2Phase_commit_protocol_diagram.png)
 
 
+Bonus 11:
+Bonus Points: Failing Participants
 
+To recover from failing participants:
+	•	Persistent Logs: Store the transaction state (e.g., reserved stock, partial commits) in a local log (e.g., executor_log.json).
+	•	Recovery on Restart: On service restart, check the log and determine if the participant was in the Prepare or Commit phase. Replay the transaction from the last known state.
+	•	Timeouts and Heartbeats: Implement timeouts for each phase, and use heartbeat checks to detect failures early, triggering recovery.
+
+⸻
+
+Bonus Points: Failing Coordinator
+
+If the Coordinator fails:
+	•	Leader Election: Use a Leader Election algorithm (e.g., Bully or Raft) to elect a new Coordinator if the current one fails.
+	•	Persistent Logs: The Coordinator logs decisions for each phase (Prepare, Commit, Abort). On recovery, the new Coordinator reads the logs to continue the process without inconsistency.
+	•	Impact: If the Coordinator fails during Phase 2, the new Coordinator checks the logs to finalize or abort the transaction based on the last known state.
