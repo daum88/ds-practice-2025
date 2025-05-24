@@ -4,6 +4,7 @@ import sys
 import os
 import re
 import grpc
+import logging
 from concurrent import futures
 # This set of lines are needed to import the gRPC stubs.
 # The path of the stubs is relative to the current file, or absolute inside the container.
@@ -20,10 +21,25 @@ import transaction_verification_pb2_grpc as transaction_grpc
 # We'll assume transaction-verification service has index 0 in the VC.
 # --------------------------------------------------------------------
 SVC_IDX = 0  # transaction-verification is index 0
-def merge_and_increment(local_vc, incoming_vc):
-    for i in range(len(local_vc)):
+def merge_and_increment(local_vc: list[int], incoming_vc: list[int]) -> list[int]:
+    # only merge up to the shorter length
+    n = min(len(local_vc), len(incoming_vc))
+
+    if len(local_vc) != len(incoming_vc):
+        logging.warning(
+            "Vector‐clock length mismatch: local=%d, incoming=%d",
+            len(local_vc), len(incoming_vc)
+        )
+
+    for i in range(n):
         local_vc[i] = max(local_vc[i], incoming_vc[i])
-    local_vc[SVC_IDX] += 1
+
+    # safely bump our own entry
+    if 0 <= SVC_IDX < len(local_vc):
+        local_vc[SVC_IDX] += 1
+    else:
+        logging.error("SVC_IDX %d out of range for VC of length %d", SVC_IDX, len(local_vc))
+
     return local_vc
 
 

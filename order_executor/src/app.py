@@ -24,6 +24,8 @@ import payment_pb2_grpc        as payment_grpc
 import books_database_pb2      as books_pb
 import books_database_pb2_grpc as books_grpc
 
+
+
 def parse_int_list(env_value):
     return [int(x.strip()) for x in env_value.split(",") if x.strip()]
 
@@ -60,7 +62,7 @@ class ExecutorService:
         # books-db stub
         self.db      = books_grpc.BooksDatabaseStub(grpc.insecure_channel("books_primary:50055"))
 
-    # ── gRPC handlers ───────────────────────────────────────────
+    #  gRPC handlers 
     def handle_election(self, req):
         cid, me = req.candidate_id, self.my_id
         if me > cid:
@@ -79,7 +81,7 @@ class ExecutorService:
             leader_status=f"Leader={self.leader_id}"
         )
 
-    # ── run everything ─────────────────────────────────────────
+    # run everything 
     def run(self):
         server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
         executor_grpc.add_OrderExecutorServicer_to_server(
@@ -95,7 +97,7 @@ class ExecutorService:
         threading.Thread(target=self.liveness_loop, daemon=True).start()
         server.wait_for_termination()
 
-    # ── Bully election ─────────────────────────────────────────
+    # Bully election 
     def start_election(self):
         with self.lock:
             if self.in_election:
@@ -134,7 +136,7 @@ class ExecutorService:
         with self.lock:
             self.in_election = False
 
-    # ── Leader polling & 2PC ───────────────────────────────────
+    # Leader polling & 2PC 
     def poll_loop(self):
         while True:
             if self.leader_id == self.my_id:
@@ -211,7 +213,7 @@ class ExecutorService:
             else:
                 time.sleep(5)
 
-    # ── liveness checks ────────────────────────────────────────
+
     def liveness_loop(self):
         while True:
             if self.leader_id > 0 and self.leader_id != self.my_id:

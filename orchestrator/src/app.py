@@ -1,5 +1,6 @@
 import sys
 import os
+import time
 import json
 import uuid
 from concurrent.futures import ThreadPoolExecutor
@@ -7,6 +8,18 @@ import grpc
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from google.protobuf.json_format import ParseDict
+
+# OTEL imports
+from opentelemetry import trace, metrics
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import OTLPMetricExporter
+from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from opentelemetry.instrumentation.grpc import GrpcInstrumentorClient
 
 # Import gRPC stubs paths
 FILE = __file__ if '__file__' in globals() else os.getenv("PYTHONFILE", "")
@@ -28,269 +41,204 @@ import suggestions_pb2_grpc as sugg_grpc
 import order_queue_pb2 as queue_pb
 import order_queue_pb2_grpc as queue_grpc
 
-# Create Flask app and enable CORS.
+# OpenTelemetry setup
+resource = Resource.create({"service.name": "orchestrator"})
+
+# Tracing
+trace.set_tracer_provider(TracerProvider(resource=resource))
+tracer = trace.get_tracer(__name__)
+trace.get_tracer_provider().add_span_processor(
+    BatchSpanProcessor(
+        OTLPSpanExporter(endpoint="observability:4317", insecure=True)
+    )
+)
+
+# Metrics
+metric_exporter = OTLPMetricExporter(endpoint="observability:4317", insecure=True)
+reader = PeriodicExportingMetricReader(metric_exporter, export_interval_millis=1000)
+metrics.set_meter_provider(MeterProvider(metric_readers=[reader], resource=resource))
+meter = metrics.get_meter(__name__)
+
+orders_counter = meter.create_counter(
+    name="orchestrator_orders_total",
+    description="Total number of checkout requests",
+)
+order_latency = meter.create_histogram(
+    name="orchestrator_order_latency_seconds",
+    description="End-to-end processing time per order",
+)
+
+# Create Flask app and enable CORS
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
-# Define gRPC service addresses.
-GRPC_SERVICES = {
-    "fraud_detection": "fraud_detection:50051",
-    "transaction_verification": "transaction_verification:50052",
-    "suggestions": "suggestions:50053",
-    "order_queue": "order_queue:50054"
+FlaskInstrumentor().instrument_app(app)
+GrpcInstrumentorClient().instrument()
+
+# Health endpoint
+@app.get("/health")
+def health():
+    return "ok", 200
+
+# gRPC service addresses
+GRPC = {
+    "fraud":      "fraud_detection:50051",
+    "tx":         "transaction_verification:50052",
+    "suggestions":"suggestions:50053",
+    "queue":      "order_queue:50054",
 }
 
-# Define vector clock indexes.
-IDX_TRANSACTION = 0
-IDX_FRAUD       = 1
-IDX_SUGGESTIONS = 2
+# Helper to create stubs
+def stub(svc_name):
+    ch = grpc.insecure_channel(GRPC[svc_name])
+    if svc_name == "fraud":
+        return fraud_grpc.FraudDetectionStub(ch)
+    if svc_name == "tx":
+        return tx_grpc.TransactionVerificationStub(ch)
+    if svc_name == "suggestions":
+        return sugg_grpc.BookSuggestionsStub(ch)
+    if svc_name == "queue":
+        return queue_grpc.OrderQueueStub(ch)
 
-# In-memory storage for orders.
-orders = {}
-# Each order is stored as: orders[order_id] = {"data": <order data>, "vc": [0,0,0]}
+# Enqueue helper
+def enqueue_order(order_id, data, priority):
+    stubq = stub("queue")
+    req = queue_pb.OrderQueueRequest(
+        order_id=order_id,
+        priority=priority,
+        order_data=json.dumps(data)
+    )
+    return stubq.Enqueue(req)
 
-def merge_vc(local_vc, incoming_vc):
-    for i in range(len(local_vc)):
-        local_vc[i] = max(local_vc[i], incoming_vc[i])
+# Utility to extract vector clock from response, handling different field names
 
-# gRPC stub helper functions.
-def get_transaction_stub():
-    channel = grpc.insecure_channel(GRPC_SERVICES["transaction_verification"])
-    return tx_grpc.TransactionVerificationStub(channel)
+def extract_clock(resp, default_length):
+    if hasattr(resp, 'vector_clock'):
+        return list(resp.vector_clock)
+    if hasattr(resp, 'vectorClock'):
+        return list(resp.vectorClock)
+    if hasattr(resp, 'vc'):
+        return list(resp.vc)
+    # fallback to zeros
+    return [0] * default_length
 
-def get_fraud_stub():
-    channel = grpc.insecure_channel(GRPC_SERVICES["fraud_detection"])
-    return fraud_grpc.FraudDetectionStub(channel)
-
-def get_suggestions_stub():
-    channel = grpc.insecure_channel(GRPC_SERVICES["suggestions"])
-    return sugg_grpc.BookSuggestionsStub(channel)
-
-def get_order_queue_stub():
-    channel = grpc.insecure_channel(GRPC_SERVICES["order_queue"])
-    return queue_grpc.OrderQueueStub(channel)
-
-# Enqueue an order with a given priority.
-def enqueue_order(order_id, data, priority=5):
-    with grpc.insecure_channel(GRPC_SERVICES["order_queue"]) as channel:
-        stub = queue_grpc.OrderQueueStub(channel)
-        req = queue_pb.OrderQueueRequest(
-            order_id=order_id,
-            priority=priority,
-            order_data=json.dumps(data)
-        )
-        return stub.Enqueue(req)
-
-@app.route('/checkout', methods=['POST'])
+# Orchestration endpoint
+@app.route("/checkout", methods=["POST"])
 def checkout():
-    """
-    Orchestrates events (a–f) with partial concurrency. If any event fails,
-    broadcasts ClearOrder to all services with the final vector clock. If all succeed,
-    enqueues the order with a priority (based on the number of items) and returns the order ID
-    and suggested books to the user. The final JSON response uses the status string
-    "Order Approved" (so that the frontend displays the response in green).
-    """
-    # Force JSON parsing.
-    req_data = request.get_json(force=True)
-    if not req_data:
-        return jsonify({"error": "Invalid JSON payload"}), 400
+    # metrics and tracing
+    orders_counter.add(1)
+    start = time.time()
 
-    # Ensure the "user" field contains an "address".
-    if "user" in req_data:
-        if "address" not in req_data["user"] or not req_data["user"]["address"]:
-            billing = req_data.get("billingAddress", {})
-            req_data["user"]["address"] = billing.get("street", "Unknown Address")
-    else:
-        req_data["user"] = {"address": req_data.get("billingAddress", {}).get("street", "Unknown Address")}
-
+    # generate order ID and payload
     order_id = str(uuid.uuid4())
-    req_data["order_id"] = order_id
+    payload  = request.get_json(force=True)
+    payload["order_id"] = order_id
 
-    # Save order data with an initial vector clock.
-    orders[order_id] = {"data": req_data, "vc": [0, 0, 0]}
-    local_vc = orders[order_id]["vc"]
+    # ensure user.address
+    billing = payload.get("billingAddress", {})
+    user    = payload.setdefault("user", {})
+    user.setdefault("address", billing.get("street", "Unknown"))
 
-    # Initialize order in all services.
-    init_in_all_services(order_id, req_data)
+    # orchestration span
+    with tracer.start_as_current_span("orchestrate_checkout") as span:
+        span.set_attribute("order.id", order_id)
 
-    # Run events (a) and (b) concurrently.
-    executor = ThreadPoolExecutor(max_workers=6)
-    futures = {}
+        # Init across services (no clock on init)
+        services = ("tx", "fraud", "suggestions")
+        for svc in services:
+            try:
+                init_req = {
+                    "order_id": order_id,
+                    "order_data": json.dumps(payload)
+                }
+                if svc == "tx":
+                    stub("tx").InitOrder(tx_pb.OrderInitRequest(**init_req))
+                elif svc == "fraud":
+                    stub("fraud").InitOrder(fraud_pb.OrderInitRequest(**init_req))
+                else:
+                    stub("suggestions").InitOrder(sugg_pb.OrderInitRequest(**init_req))
+            except Exception as e:
+                span.record_exception(e)
+                return jsonify({"error": f"init {svc} failed"}), 500
 
-    def event_a():
-        stub = get_transaction_stub()
-        req = tx_pb.OrderEventRequest(order_id=order_id, vector_clock=local_vc)
-        return stub.VerifyItems(req)
+        # initial zero vector clock
+        vc = [0] * len(services)
 
-    def event_b():
-        stub = get_transaction_stub()
-        req = tx_pb.OrderEventRequest(order_id=order_id, vector_clock=local_vc)
-        return stub.VerifyUserData(req)
+        # 1) VerifyItems & VerifyUserData in parallel
+        pool = ThreadPoolExecutor(max_workers=2)
+        fut_items = pool.submit(lambda: stub("tx").VerifyItems(
+            tx_pb.OrderEventRequest(order_id=order_id, vector_clock=vc)
+        ))
+        fut_udata = pool.submit(lambda: stub("tx").VerifyUserData(
+            tx_pb.OrderEventRequest(order_id=order_id, vector_clock=vc)
+        ))
 
-    futures['a'] = executor.submit(event_a)
-    futures['b'] = executor.submit(event_b)
+        res_items = fut_items.result()
+        res_udata = fut_udata.result()
+        a_ok, b_ok = res_items.success, res_udata.success
+        ci = extract_clock(res_items, len(services))
+        cu = extract_clock(res_udata, len(services))
+        vc = [max(ci[i], cu[i]) for i in range(len(services))]
 
-    final_status = {"ok": True, "message": "", "suggestions": []}
+        if not (a_ok and b_ok):
+            span.set_attribute("orchestrator.status", "early_abort")
+            return jsonify({"orderId": order_id, "status": "Failed early"}), 400
 
-    def handle_a_result():
-        a_resp = futures['a'].result()
-        merge_vc(local_vc, a_resp.updated_vc)
-        if not a_resp.success:
-            final_status["ok"] = False
-            final_status["message"] = f"(a) failed: {a_resp.message}"
-            return
-        stub = get_transaction_stub()
-        c_req = tx_pb.OrderEventRequest(order_id=order_id, vector_clock=local_vc)
-        c_resp = stub.VerifyCreditCard(c_req)
-        merge_vc(local_vc, c_resp.updated_vc)
-        if not c_resp.success:
-            final_status["ok"] = False
-            final_status["message"] = f"(c) failed: {c_resp.message}"
-
-    def handle_b_result():
-        b_resp = futures['b'].result()
-        merge_vc(local_vc, b_resp.updated_vc)
-        if not b_resp.success:
-            final_status["ok"] = False
-            final_status["message"] = f"(b) failed: {b_resp.message}"
-            return
-        stub = get_fraud_stub()
-        d_req = fraud_pb.OrderEventRequest(order_id=order_id, vector_clock=local_vc)
-        d_resp = stub.CheckUserData(d_req)
-        merge_vc(local_vc, d_resp.updated_vc)
-        if not d_resp.success:
-            final_status["ok"] = False
-            final_status["message"] = f"(d) failed: {d_resp.message}"
-
-    futures['handle_a'] = executor.submit(handle_a_result)
-    futures['handle_b'] = executor.submit(handle_b_result)
-    futures['handle_a'].result()
-    futures['handle_b'].result()
-
-    if not final_status["ok"]:
-        broadcast_clear(order_id, local_vc)
-        return jsonify({
-            "orderId": order_id,
-            "status": f"Failed early: {final_status['message']}",
-            "suggestedBooks": []
-        })
-
-    def event_e():
-        stub = get_fraud_stub()
-        req = fraud_pb.OrderEventRequest(order_id=order_id, vector_clock=local_vc)
-        return stub.CheckCreditCard(req)
-
-    e_resp = event_e()
-    merge_vc(local_vc, e_resp.updated_vc)
-    if not e_resp.success:
-        final_status["ok"] = False
-        final_status["message"] = f"(e) failed: {e_resp.message}"
-        broadcast_clear(order_id, local_vc)
-        return jsonify({
-            "orderId": order_id,
-            "status": final_status["message"],
-            "suggestedBooks": []
-        })
-
-    # (f) Suggestions: Get AI suggestions.
-    def event_f():
-        stub = get_suggestions_stub()
-        req = sugg_pb.GenerateSuggestionsRequest(
-            order_id=order_id,
-            num_books=3,
-            vector_clock=local_vc
+        # 2) VerifyCreditCard
+        res_credit = stub("tx").VerifyCreditCard(
+            tx_pb.OrderEventRequest(order_id=order_id, vector_clock=vc)
         )
-        return stub.GenerateSuggestions(req)
+        cc = extract_clock(res_credit, len(services))
+        vc = [max(vc[i], cc[i]) for i in range(len(services))]
+        if not res_credit.success:
+            span.set_attribute("orchestrator.status", "tx_fail")
+            return jsonify({"orderId": order_id, "status": "Payment data invalid"}), 400
 
-    try:
-        f_resp = event_f()
-    except Exception as ex:
-        print(f"[Orchestrator] AI suggestions failed: {str(ex)}; using fallback list.")
-        from random import sample
-        BOOKS_LIST = [
-            {"title": "1984", "author": "George Orwell"},
-            {"title": "To Kill a Mockingbird", "author": "Harper Lee"},
-            {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
-            {"title": "Pride and Prejudice", "author": "Jane Austen"},
-            {"title": "The Catcher in the Rye", "author": "J.D. Salinger"}
-        ]
-        suggested_books = sample(BOOKS_LIST, 3)
-    else:
-        if not hasattr(f_resp, "books") or not f_resp.books:
-            from random import sample
-            BOOKS_LIST = [
-                {"title": "1984", "author": "George Orwell"},
-                {"title": "To Kill a Mockingbird", "author": "Harper Lee"},
-                {"title": "The Great Gatsby", "author": "F. Scott Fitzgerald"},
-                {"title": "Pride and Prejudice", "author": "Jane Austen"},
-                {"title": "The Catcher in the Rye", "author": "J.D. Salinger"}
-            ]
-            suggested_books = sample(BOOKS_LIST, 3)
-        else:
-            suggested_books = [{"title": b.title, "author": b.author} for b in f_resp.books]
+        # 3) CheckUserData (fraud)
+        res_fraud_udata = stub("fraud").CheckUserData(
+            fraud_pb.OrderEventRequest(order_id=order_id, vector_clock=vc)
+        )
+        cd = extract_clock(res_fraud_udata, len(services))
+        vc = [max(vc[i], cd[i]) for i in range(len(services))]
+        if not res_fraud_udata.success:
+            span.set_attribute("orchestrator.status", "fraud_fail")
+            return jsonify({"orderId": order_id, "status": "Fraud detected"}), 400
 
-    # Calculate priority based on the number of items: more than 2 items get a higher priority.
-    item_count = len(req_data.get("items", []))
-    priority = 1 if item_count > 2 else 5
-    queue_response = enqueue_order(order_id, req_data, priority)
-    if queue_response.success:
-        print(f"[Orchestrator] Order {order_id} enqueued successfully (priority={priority}).")
-    else:
-        print(f"[Orchestrator] Failed to enqueue order {order_id}: {queue_response.message}")
+        # 4) CheckCreditCard (fraud)
+        res_fraud_cc = stub("fraud").CheckCreditCard(
+            fraud_pb.OrderEventRequest(order_id=order_id, vector_clock=vc)
+        )
+        ce = extract_clock(res_fraud_cc, len(services))
+        vc = [max(vc[i], ce[i]) for i in range(len(services))]
+        if not res_fraud_cc.success:
+            span.set_attribute("orchestrator.status", "fraud_cc_fail")
+            return jsonify({"orderId": order_id, "status": "Fraud CC fail"}), 400
 
-    broadcast_clear(order_id, local_vc)
+        # 5) GenerateSuggestions
+        try:
+            sreq = sugg_pb.GenerateSuggestionsRequest(
+                order_id=order_id,
+                num_books=3,
+                vector_clock=vc
+            )
+            sres = stub("suggestions").GenerateSuggestions(sreq)
+            cb = extract_clock(sres, len(services))
+            vc = [max(vc[i], cb[i]) for i in range(len(services))]
+            books = [{"title": b.title, "author": b.author} for b in sres.books]
+        except Exception:
+            books = []
 
-    # Return JSON response with order ID, status, and suggested books.
-    return jsonify({
-        "orderId": order_id,
-        "status": "Order Approved",
-        "suggestedBooks": suggested_books
-    })
+        # 6) Enqueue Order
+        prio = 1 if len(payload.get("items", [])) > 2 else 5
+        qres = enqueue_order(order_id, payload, prio)
+        span.set_attribute("orchestrator.enqueue_success", qres.success)
 
-def init_in_all_services(order_id, data):
-    """
-    Calls InitOrder in each microservice to cache order data & initialize vector clocks.
-    """
-    with grpc.insecure_channel(GRPC_SERVICES["transaction_verification"]) as ch:
-        stub = tx_grpc.TransactionVerificationStub(ch)
-        stub.InitOrder(tx_pb.OrderInitRequest(order_id=order_id, order_data=json.dumps(data)))
-    with grpc.insecure_channel(GRPC_SERVICES["fraud_detection"]) as ch:
-        stub = fraud_grpc.FraudDetectionStub(ch)
-        stub.InitOrder(fraud_pb.OrderInitRequest(order_id=order_id, order_data=json.dumps(data)))
-    with grpc.insecure_channel(GRPC_SERVICES["suggestions"]) as ch:
-        stub = sugg_grpc.BookSuggestionsStub(ch)
-        stub.InitOrder(sugg_pb.OrderInitRequest(order_id=order_id, order_data=json.dumps(data)))
+        span.set_attribute("orchestrator.status", "approved")
+        result = {"orderId": order_id, "status": "Order Approved", "suggestedBooks": books}
 
-def broadcast_clear(order_id, final_vc):
-    """
-    Broadcasts a ClearOrder message to all services with the final vector clock,
-    and then removes the order from the local store.
-    """
-    print(f"[Orchestrator] Broadcasting ClearOrder({order_id}) with final VC={final_vc}")
-    try:
-        stub = get_transaction_stub()
-        req = tx_pb.ClearOrderRequest(order_id=order_id, final_vc=final_vc)
-        resp = stub.ClearOrder(req)
-        print(f"  [Transaction] Clear => success={resp.success}, msg={resp.message}")
-    except Exception as e:
-        print(f"  [Transaction] Error in ClearOrder: {e}")
-    try:
-        stub = get_fraud_stub()
-        req = fraud_pb.ClearOrderRequest(order_id=order_id, final_vc=final_vc)
-        resp = stub.ClearOrder(req)
-        print(f"  [Fraud] Clear => success={resp.success}, msg={resp.message}")
-    except Exception as e:
-        print(f"  [Fraud] Error in ClearOrder: {e}")
-    try:
-        stub = get_suggestions_stub()
-        req = sugg_pb.ClearOrderRequest(order_id=order_id, final_vc=final_vc)
-        resp = stub.ClearOrder(req)
-        print(f"  [Suggestions] Clear => success={resp.success}, msg={resp.message}")
-    except Exception as e:
-        print(f"  [Suggestions] Error in ClearOrder: {e}")
-
-    if order_id in orders:
-        del orders[order_id]
+    # record latency
+    order_latency.record(time.time() - start, {"status": result["status"]})
+    return jsonify(result), 200
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

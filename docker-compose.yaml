@@ -9,7 +9,10 @@ services:
       - "8080:80"
     volumes:
       - ./frontend/src:/usr/share/nginx/html
-
+    depends_on:
+      orchestrator:
+        condition: service_healthy
+  
   orchestrator:
     build:
       context: ./
@@ -20,7 +23,12 @@ services:
       - PYTHONUNBUFFERED=TRUE
     volumes:
       - ./orchestrator/src:/app/orchestrator/src
-      - ./utils:/app/utils
+      - ./utils:/app/utils  
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 5s
+      timeout: 2s
+      retries: 10 
 
 
   fraud_detection:
@@ -59,7 +67,7 @@ services:
       - PYTHONUNBUFFERED=TRUE
       - PYTHONFILE=/app/suggestions/src/app.py
       #OpenAI API key
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_API_KEY=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
     volumes:
       - ./utils:/app/utils
       - ./suggestions/src:/app/suggestions/src
@@ -204,3 +212,13 @@ services:
     volumes:
       - ./utils:/app/utils
       - ./payment/src:/app/payment/src
+
+
+  observability:
+    image: grafana/otel-lgtm
+    ports:
+      - "3000:3000"   # Grafana UI
+      - "4317:4317"   # OTLP/gRPC
+      - "4318:4318"   # OTLP/HTTP
+    environment:
+      - OTEL_METRIC_EXPORT_INTERVAL=1000  # push metrics every 1s
