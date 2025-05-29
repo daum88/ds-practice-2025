@@ -6,9 +6,14 @@
 ├── docs/                     # Documentation and architecture diagrams
 │   ├── README.md
 │   ├── Architecture_diagram.png
+│   ├── System_Architecture_final_diagram.png
 │   ├── System-diagram.jpg
 │   ├── Vector_clocks_diagram.jpg
+│   ├── Consitency_protocol_diagram.jpg
+│   ├── leader_election_bully_algorithm_digaram.jpg
+│   ├── Dashboard.json
 │   └── Leader_election_diagram.jpg
+│ 
 │
 ├── books_database/                 # books database microservice
 │   ├── src/
@@ -60,6 +65,10 @@
 │       ├── app.py
 │   ├── Dockerfile
 │   ├── requirements.txt
+│ 
+├── test/              # End-to-End service
+│   |
+│   ├── locustfile.py
 │ 
 ├── utils/                    # Utility functions (apis, pb, others)
 ├── docker-compose.yaml       # Docker Compose configuration
@@ -150,3 +159,12 @@ If the Coordinator fails:
 	•	Leader Election: Use a Leader Election algorithm (e.g., Bully or Raft) to elect a new Coordinator if the current one fails.
 	•	Persistent Logs: The Coordinator logs decisions for each phase (Prepare, Commit, Abort). On recovery, the new Coordinator reads the logs to continue the process without inconsistency.
 	•	Impact: If the Coordinator fails during Phase 2, the new Coordinator checks the logs to finalize or abort the transaction based on the last known state.
+
+ 
+
+ ## Checkpoint 4:
+
+### System Architecture diagram
+
+![System_Architecture-diagram](https://github.com/daum88/ds-practice-2025/blob/venkat/docs/System_architecture-final.jpg)
+
